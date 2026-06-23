@@ -1,0 +1,106 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useHabits, Habit } from "@/hooks/useHabits";
+import Navbar from "@/components/Navbar";
+import HabitCard from "@/components/HabitCard";
+import HabitForm from "@/components/HabitForm";
+import { Plus, Filter } from "lucide-react";
+import styles from "./habits.module.css";
+
+const CATEGORIES = ["All", "Health", "Fitness", "Mindfulness", "Work", "Learning", "Social", "Other"];
+
+export default function HabitsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { habits, loading, addHabit, updateHabit, deleteHabit, toggleCompletion } = useHabits();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/auth/login");
+    }
+  }, [user, authLoading, router]);
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [filter, setFilter] = useState("All");
+
+  const filtered = filter === "All" ? habits : habits.filter((h) => h.category === filter);
+
+  const handleEditSave = async (data: Omit<Habit, "id" | "userId" | "createdAtMs" | "streak" | "longestStreak" | "completedDates">) => {
+    if (editingHabit) await updateHabit(editingHabit.id, data);
+    setEditingHabit(null);
+  };
+
+  if (authLoading || !user) {
+    return (
+      <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", background: "#0a0a0f" }}>
+        <span className="spinner" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-wrapper">
+      <Navbar />
+      <main className="main-content">
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.title}>My Habits</h1>
+            <p className={styles.sub}>{habits.length} habit{habits.length !== 1 ? "s" : ""} being tracked</p>
+          </div>
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <Plus size={16} /> New Habit
+          </button>
+        </div>
+
+        {/* Category filters */}
+        <div className={styles.filters}>
+          <Filter size={15} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              className={`${styles.filterBtn} ${filter === cat ? styles.filterActive : ""}`}
+              onClick={() => setFilter(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Habits */}
+        {loading ? (
+          <div className={styles.loading}><span className="spinner" /></div>
+        ) : filtered.length === 0 ? (
+          <div className={styles.empty}>
+            <span style={{ fontSize: 48 }}>🎯</span>
+            <h3>{filter === "All" ? "No habits yet" : `No ${filter} habits`}</h3>
+            <p>{filter === "All" ? "Add your first habit to get started!" : "Try a different category or add a new habit."}</p>
+            {filter === "All" && (
+              <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                <Plus size={16} /> Add your first habit
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={styles.grid}>
+            {filtered.map((habit) => (
+              <HabitCard
+                key={habit.id}
+                habit={habit}
+                onToggle={toggleCompletion}
+                onEdit={setEditingHabit}
+                onDelete={deleteHabit}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {showForm && <HabitForm title="New Habit" onSave={addHabit} onCancel={() => setShowForm(false)} />}
+      {editingHabit && <HabitForm title="Edit Habit" initial={editingHabit} onSave={handleEditSave} onCancel={() => setEditingHabit(null)} />}
+    </div>
+  );
+}

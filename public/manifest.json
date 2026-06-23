@@ -1,0 +1,17 @@
+{
+  "short_name": "HabitFlow",
+  "name": "HabitFlow — Build Better Habits",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0a0f",
+  "theme_color": "#7c6aff",
+  "display": "standalone",
+  "orientation": "portrait"
+}
