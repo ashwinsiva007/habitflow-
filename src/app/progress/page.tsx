@@ -160,7 +160,7 @@ export default function ProgressPage() {
                       </Pie>
                       <Tooltip
                         contentStyle={{ background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 10, color: "#f0f0ff", fontSize: 13 }}
-                        formatter={(v: number, name: string) => [v, name]}
+                        formatter={(v: any, name: string) => [v, name]}
                       />
                       <Legend
                         iconType="circle"
@@ -226,7 +226,7 @@ export default function ProgressPage() {
                   <YAxis tick={{ fill: "#9090b0", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} unit="%" />
                   <Tooltip
                     contentStyle={{ background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 10, color: "#f0f0ff", fontSize: 13 }}
-                    formatter={(v: number, key: string) => [key === "rate" ? `${v}%` : v, key === "rate" ? "Completion Rate" : "Completed"]}
+                    formatter={(v: any, key: string) => [key === "rate" ? `${v}%` : v, key === "rate" ? "Completion Rate" : "Completed"]}
                   />
                   <Area type="monotone" dataKey="rate" stroke="#7c6aff" strokeWidth={2.5} fill="url(#rateGrad)" dot={false} activeDot={{ r: 5, fill: "#7c6aff" }} />
                 </AreaChart>
