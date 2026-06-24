@@ -26,28 +26,32 @@ export interface Note {
   notified?: boolean;
 }
 
-const LS_KEY = "habitflow_notes_v1";
-
 export function useNotes() {
   const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLocal, setIsLocal] = useState(false);
 
+  const getLSKey = useCallback(() => {
+    return user ? `habitflow_notes_v1_${user.uid}` : "habitflow_notes_v1_guest";
+  }, [user]);
+
   const loadFromLS = useCallback(() => {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      const key = getLSKey();
+      const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
-  }, []);
+  }, [getLSKey]);
 
   const saveToLS = useCallback((data: Note[]) => {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      const key = getLSKey();
+      localStorage.setItem(key, JSON.stringify(data));
     } catch {}
-  }, []);
+  }, [getLSKey]);
 
   const sortNotes = (data: Note[]) => {
     return [...data].sort((a, b) => {

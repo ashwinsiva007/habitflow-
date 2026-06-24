@@ -33,32 +33,36 @@ export interface Habit {
   completedDates: string[];
 }
 
-const LS_KEY = "habitflow_habits_v2";
-
 export function useHabits() {
   const { user } = useAuth();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLocal, setIsLocal] = useState(false);
 
+  const getLSKey = useCallback(() => {
+    return user ? `habitflow_habits_v2_${user.uid}` : "habitflow_habits_v2_guest";
+  }, [user]);
+
   const loadFromLS = useCallback(() => {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      const key = getLSKey();
+      const raw = localStorage.getItem(key);
       if (!raw) return [];
       const data: Habit[] = JSON.parse(raw);
       return data.sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
     } catch {
       return [];
     }
-  }, []);
+  }, [getLSKey]);
 
   const saveToLS = useCallback((data: Habit[]) => {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      const key = getLSKey();
+      localStorage.setItem(key, JSON.stringify(data));
     } catch (err) {
       console.error("Failed to save habits to local storage:", err);
     }
-  }, []);
+  }, [getLSKey]);
 
   useEffect(() => {
     if (!user) {

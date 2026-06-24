@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotes, Note } from "@/hooks/useNotes";
-import { Plus, Pin, Trash2, Bell, BellOff, X, StickyNote } from "lucide-react";
+import { Plus, Pin, Trash2, X, StickyNote } from "lucide-react";
 import { format } from "date-fns";
 import styles from "./notes.module.css";
 
@@ -69,8 +69,8 @@ export default function NotesPage() {
         {/* Header */}
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Notes & Reminders</h1>
-            <p className={styles.sub}>Capture thoughts and set daily reminders</p>
+            <h1 className={styles.title}>Notes</h1>
+            <p className={styles.sub}>Capture your thoughts and ideas</p>
           </div>
           <button className="btn btn-primary" onClick={openNew}>
             <Plus size={16}/> New Note
@@ -143,21 +143,6 @@ export default function NotesPage() {
               onChange={(e) => setContent(e.target.value)}
             />
 
-            {/* Reminder */}
-            <div className={styles.reminderRow}>
-              <Bell size={15} style={{color: "var(--text-muted)"}}/>
-              <span className={styles.reminderLabel}>Reminder</span>
-              <input
-                type="datetime-local"
-                className={styles.reminderInput}
-                value={reminder}
-                onChange={(e) => setReminder(e.target.value)}
-              />
-              {reminder && (
-                <button className={styles.clearReminder} onClick={() => setReminder("")}><X size={13}/></button>
-              )}
-            </div>
-
             <div className={styles.formActions}>
               <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
               <button className={styles.saveBtn} onClick={handleSave} style={{background: color}}>
@@ -177,9 +162,6 @@ function NoteCard({ note, onEdit, onDelete, onPin }: {
   onDelete: (id: string) => void;
   onPin: (id: string) => void;
 }) {
-  const hasReminder = !!note.reminder;
-  const reminderPassed = hasReminder && new Date(note.reminder) < new Date();
-
   return (
     <div
       className={styles.card}
@@ -203,12 +185,6 @@ function NoteCard({ note, onEdit, onDelete, onPin }: {
 
       <div className={styles.cardMeta}>
         <span className={styles.cardDate}>{format(new Date(note.createdAtMs), "MMM d")}</span>
-        {hasReminder && (
-          <span className={`${styles.cardReminder} ${reminderPassed ? styles.reminderPast : ""}`}>
-            {reminderPassed ? <BellOff size={11}/> : <Bell size={11}/>}
-            {format(new Date(note.reminder), "MMM d, h:mm a")}
-          </span>
-        )}
       </div>
     </div>
   );

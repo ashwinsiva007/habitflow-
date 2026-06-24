@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { Flame, BarChart3, CheckCircle2, TrendingUp, StickyNote, LogOut, Bell } from "lucide-react";
+import { Flame, BarChart3, CheckCircle2, TrendingUp, StickyNote, LogOut } from "lucide-react";
 import styles from "./Navbar.module.css";
 
 const NAV_ITEMS = [
@@ -11,7 +11,6 @@ const NAV_ITEMS = [
   { href: "/habits",    label: "Habits",    icon: CheckCircle2 },
   { href: "/progress",  label: "Progress",  icon: TrendingUp },
   { href: "/notes",     label: "Notes",     icon: StickyNote },
-  { href: "/reminders", label: "Reminders", icon: Bell },
 ];
 
 export default function Navbar() {

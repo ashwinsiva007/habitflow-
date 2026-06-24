@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
-import ReminderService from "@/components/ReminderService";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ConfettiProvider from "@/components/ConfettiProvider";
 
@@ -45,7 +44,6 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <ConfettiProvider />
-            <ReminderService />
             {children}
           </AuthProvider>
         </ThemeProvider>
