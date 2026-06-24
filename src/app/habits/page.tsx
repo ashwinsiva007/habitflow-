@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits, Habit } from "@/hooks/useHabits";
+import { useProfile } from "@/hooks/useProfile";
 import Navbar from "@/components/Navbar";
 import HabitCard from "@/components/HabitCard";
 import HabitForm from "@/components/HabitForm";
@@ -16,6 +17,7 @@ export default function HabitsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { habits, loading, addHabit, updateHabit, deleteHabit, toggleCompletion } = useHabits();
+  const { addXP } = useProfile();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -90,7 +92,7 @@ export default function HabitsPage() {
               <HabitCard
                 key={habit.id}
                 habit={habit}
-                onToggle={toggleCompletion}
+                onToggle={(habit) => toggleCompletion(habit, addXP)}
                 onEdit={setEditingHabit}
                 onDelete={deleteHabit}
               />

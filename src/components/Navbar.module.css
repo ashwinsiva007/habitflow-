@@ -81,6 +81,18 @@
 .avatarImg     { width: 100%; height: 100%; object-fit: cover; }
 .avatarInitial { font-size: 14px; font-weight: 700; color: var(--accent); }
 
+.profileLink {
+  text-decoration: none;
+  display: block;
+}
+
+.profileLink:hover .avatar {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-soft);
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
 /* Show top nav on md+ screens */
 @media (min-width: 768px) {
   .topNav { display: block; }

@@ -195,7 +195,7 @@ export function useHabits() {
     }
   }, [user, isLocal, saveToLS]);
 
-  const toggleCompletion = useCallback(async (habit: Habit) => {
+  const toggleCompletion = useCallback(async (habit: Habit, addXP?: (amount?: number) => Promise<boolean | undefined>) => {
     if (!user) return;
     const today = format(new Date(), "yyyy-MM-dd");
     const completedDates = [...(habit.completedDates || [])];
@@ -228,6 +228,11 @@ export function useHabits() {
         });
         setIsLocal(true);
       }
+    }
+
+    // Award XP if completed
+    if (!isCompleted && addXP) {
+      await addXP();
     }
   }, [user, isLocal, saveToLS]);
 

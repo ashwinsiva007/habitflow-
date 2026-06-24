@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { Flame, BarChart3, CheckCircle2, TrendingUp, StickyNote, LogOut } from "lucide-react";
+import { Flame, BarChart3, CheckCircle2, TrendingUp, StickyNote, LogOut, Bell } from "lucide-react";
 import styles from "./Navbar.module.css";
 
 const NAV_ITEMS = [
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/habits",    label: "Habits",    icon: CheckCircle2 },
   { href: "/progress",  label: "Progress",  icon: TrendingUp },
   { href: "/notes",     label: "Notes",     icon: StickyNote },
+  { href: "/reminders", label: "Reminders", icon: Bell },
 ];
 
 export default function Navbar() {
@@ -42,7 +43,7 @@ export default function Navbar() {
 
           <div className={styles.right}>
             {user && (
-              <>
+              <Link href="/profile" className={styles.profileLink}>
                 <div className={styles.avatar} title={user.displayName || user.email || ""}>
                   {user.photoURL ? (
                     <img src={user.photoURL} alt="avatar" className={styles.avatarImg} />
@@ -52,10 +53,7 @@ export default function Navbar() {
                     </span>
                   )}
                 </div>
-                <button onClick={logOut} className={styles.logoutBtn} title="Sign Out">
-                  <LogOut size={16} />
-                </button>
-              </>
+              </Link>
             )}
           </div>
         </div>
@@ -73,6 +71,23 @@ export default function Navbar() {
             <span className={styles.tabLabel}>{label}</span>
           </Link>
         ))}
+        {user && (
+          <Link
+            href="/profile"
+            className={`${styles.tabItem} ${pathname === "/profile" ? styles.tabActive : ""}`}
+          >
+            <div className={styles.avatar} style={{ width: 24, height: 24, borderWidth: pathname === "/profile" ? 2 : 1, borderColor: pathname === "/profile" ? 'var(--accent)' : 'var(--border)' }}>
+              {user.photoURL ? (
+                <img src={user.photoURL} alt="avatar" className={styles.avatarImg} />
+              ) : (
+                <span className={styles.avatarInitial} style={{ fontSize: 10 }}>
+                  {(user.displayName || user.email || "U")[0].toUpperCase()}
+                </span>
+              )}
+            </div>
+            <span className={styles.tabLabel}>Profile</span>
+          </Link>
+        )}
       </nav>
     </>
   );

@@ -12,6 +12,7 @@ import {
 import { format, subDays, eachDayOfInterval } from "date-fns";
 import { Flame, Award, TrendingUp, Target } from "lucide-react";
 import styles from "./progress.module.css";
+import Heatmap from "@/components/Heatmap";
 
 const CAT_COLORS: Record<string, string> = {
   Health: "#22d3a0", Fitness: "#f97316", Mindfulness: "#a78bfa",
@@ -96,6 +97,10 @@ export default function ProgressPage() {
   const avgRate = chartData.length > 0
     ? Math.round(chartData.reduce((s, d) => s + d.rate, 0) / chartData.length)
     : 0;
+
+  const allCompletedDates = habits.reduce((acc: string[], habit) => {
+    return [...acc, ...(habit.completedDates || [])];
+  }, []);
 
   if (authLoading || !user) {
     return (
@@ -231,6 +236,12 @@ export default function ProgressPage() {
                   <Area type="monotone" dataKey="rate" stroke="#7c6aff" strokeWidth={2.5} fill="url(#rateGrad)" dot={false} activeDot={{ r: 5, fill: "#7c6aff" }} />
                 </AreaChart>
               </ResponsiveContainer>
+            </div>
+
+            {/* GitHub-style Heatmap */}
+            <div className={`${styles.chartCard} glass`}>
+              <h2 className={styles.chartTitle}>🗓️ 6-Month Activity Heatmap</h2>
+              <Heatmap completedDates={allCompletedDates} daysToShow={180} />
             </div>
           </>
         )}

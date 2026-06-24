@@ -1,0 +1,156 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.section {
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.avatarLarge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-light);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.userDetails {
+  flex: 1;
+}
+
+.userName {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.userEmail {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.themeOptions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.themeCard {
+  flex: 1;
+  min-width: 120px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.themeCard:hover {
+  border-color: var(--border-light);
+  background: var(--bg-card-hover);
+}
+
+.themeCard.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.themeIcon {
+  color: var(--text-secondary);
+}
+
+.themeCard.active .themeIcon {
+  color: var(--accent);
+}
+
+.themeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.dangerZone {
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.logoutRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logoutInfo h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.logoutInfo p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .profileInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .logoutRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    text-align: center;
+  }
+}

@@ -25,6 +25,28 @@
   --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
 }
 
+:root[data-theme='light'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-light: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-soft: rgba(99, 102, 241, 0.15);
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.08);
+}
+
 * {
   margin: 0;
   padding: 0;

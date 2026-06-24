@@ -2,113 +2,58 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { collection, query, where, onSnapshot, updateDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Note } from "@/hooks/useNotes";
-
-const LS_KEY = "habitflow_notes_v1";
+import { useReminders } from "@/hooks/useReminders";
+import { useNotes } from "@/hooks/useNotes";
 
 export default function ReminderService() {
   const { user } = useAuth();
+  const { reminders, updateReminder } = useReminders();
+  const { notes, updateNote } = useNotes();
 
   useEffect(() => {
     if (!user) return;
 
-    // Request notification permission if needed
-    if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "default") {
-        Notification.requestPermission();
-      }
-    }
+    const checkReminders = () => {
+      const now = new Date();
 
-    let unsubscribe = () => {};
-    let isLocalFallback = false;
-
-    const checkLocalReminders = () => {
-      try {
-        const raw = localStorage.getItem(LS_KEY);
-        if (!raw) return;
-        const notes: Note[] = JSON.parse(raw);
-        let updated = false;
-        const now = new Date();
-
-        const updatedNotes = notes.map((note) => {
-          if (note.reminder && !note.notified) {
-            const remDate = new Date(note.reminder);
-            if (remDate <= now) {
-              if (Notification.permission === "granted") {
-                new Notification(note.title || "HabitFlow Reminder", {
-                  body: note.content || "You have a reminder scheduled for now.",
-                  icon: "/favicon.ico",
-                });
-              }
-              note.notified = true;
-              updated = true;
+      // Check dedicated reminders
+      reminders.forEach((rem) => {
+        if (!rem.notified) {
+          const remDate = new Date(rem.time);
+          if (remDate <= now) {
+            if (Notification.permission === "granted") {
+              new Notification(rem.title || "HabitFlow Reminder", {
+                body: rem.description || "You have a reminder scheduled for now.",
+                icon: "/favicon.ico",
+              });
             }
+            updateReminder(rem.id, { notified: true });
           }
-          return note;
-        });
-
-        if (updated) {
-          localStorage.setItem(LS_KEY, JSON.stringify(updatedNotes));
-          window.dispatchEvent(new Event("notes_updated"));
         }
-      } catch (err) {
-        console.error("Local reminder check error:", err);
-      }
-    };
+      });
 
-    let localInterval: NodeJS.Timeout;
-
-    try {
-      const q = query(
-        collection(db, "notes"),
-        where("userId", "==", user.uid)
-      );
-
-      unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const now = new Date();
-          snapshot.docs.forEach(async (d) => {
-            const note = d.data();
-            if (note.reminder && !note.notified) {
-              const remDate = new Date(note.reminder);
-              if (remDate <= now) {
-                if (Notification.permission === "granted") {
-                  new Notification(note.title || "HabitFlow Reminder", {
-                    body: note.content || "You have a reminder scheduled for now.",
-                    icon: "/favicon.ico",
-                  });
-                }
-                try {
-                  await updateDoc(doc(db, "notes", d.id), { notified: true });
-                } catch (err) {
-                  console.error("Failed to update notified status in Firestore:", err);
-                }
-              }
+      // Check legacy note reminders
+      notes.forEach((note) => {
+        if (note.reminder && !note.notified) {
+          const remDate = new Date(note.reminder);
+          if (remDate <= now) {
+            if (Notification.permission === "granted") {
+              new Notification(note.title || "HabitFlow Note Reminder", {
+                body: note.content || "You have a note reminder scheduled for now.",
+                icon: "/favicon.ico",
+              });
             }
-          });
-        },
-        (error) => {
-          console.warn("Firestore reminders listener failed (checking rules), falling back to local storage polling:", error.message);
-          isLocalFallback = true;
-          localInterval = setInterval(checkLocalReminders, 10000);
-          checkLocalReminders();
+            updateNote(note.id, { notified: true });
+          }
         }
-      );
-    } catch (err) {
-      console.warn("Firestore reminders query failed, falling back to local storage polling:", err);
-      isLocalFallback = true;
-      localInterval = setInterval(checkLocalReminders, 10000);
-      checkLocalReminders();
-    }
-
-    return () => {
-      unsubscribe();
-      if (localInterval) clearInterval(localInterval);
+      });
     };
-  }, [user]);
+
+    const interval = setInterval(checkReminders, 10000); // Check every 10 seconds
+    checkReminders(); // Check immediately on mount
+
+    return () => clearInterval(interval);
+  }, [user, reminders, notes, updateReminder, updateNote]);
 
   return null;
 }

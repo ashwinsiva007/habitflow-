@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import ReminderService from "@/components/ReminderService";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import ConfettiProvider from "@/components/ConfettiProvider";
 
 export const metadata: Metadata = {
   title: "HabitFlow — Build Better Habits",
@@ -40,10 +42,13 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AuthProvider>
-          <ReminderService />
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ConfettiProvider />
+            <ReminderService />
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -3,19 +3,22 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { useHabits } from "@/hooks/useHabits";
+import { useHabits, Habit } from "@/hooks/useHabits";
+import { useProfile, calculateProgress } from "@/hooks/useProfile";
 import Navbar from "@/components/Navbar";
 import HabitCard from "@/components/HabitCard";
 import HabitForm from "@/components/HabitForm";
-import { Flame, CheckCircle2, TrendingUp, Plus, Target } from "lucide-react";
+import { Flame, CheckCircle2, TrendingUp, Plus, Target, Trophy } from "lucide-react";
 import { format } from "date-fns";
-import { Habit } from "@/hooks/useHabits";
 import styles from "./dashboard.module.css";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { habits, loading: habitsLoading, addHabit, updateHabit, deleteHabit, toggleCompletion } = useHabits();
+  const { profile, addXP } = useProfile();
+
+  const progress = calculateProgress(profile.xp);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -86,9 +89,28 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* Level and XP Progress */}
+        <div className={styles.progressSection} style={{ marginTop: 24, padding: 24, background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+          <div className={styles.progressHeader} style={{ marginBottom: 12 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Trophy size={18} color="var(--accent)" />
+              Level {progress.currentLevel}
+            </span>
+            <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+              {Math.round(progress.xpIntoLevel)} / {Math.round(progress.xpRequiredForNext)} XP to next level
+            </span>
+          </div>
+          <div className={styles.progressBar} style={{ height: 12, background: 'var(--bg-secondary)', borderRadius: 100, overflow: 'hidden' }}>
+            <div 
+              className={styles.progressFill} 
+              style={{ width: `${progress.percentage}%`, background: 'linear-gradient(90deg, var(--accent), var(--success))', height: '100%', borderRadius: 100, transition: 'width 0.5s ease-out' }} 
+            />
+          </div>
+        </div>
+
         {/* Progress bar */}
         {totalHabits > 0 && (
-          <div className={styles.progressSection}>
+          <div className={styles.progressSection} style={{ marginTop: 24 }}>
             <div className={styles.progressHeader}>
               <span>Today&apos;s completion</span>
               <span>{completionRate}%</span>
@@ -119,7 +141,7 @@ export default function DashboardPage() {
                 <HabitCard
                   key={habit.id}
                   habit={habit}
-                  onToggle={toggleCompletion}
+                  onToggle={(habit) => toggleCompletion(habit, addXP)}
                   onEdit={handleEdit}
                   onDelete={deleteHabit}
                 />
