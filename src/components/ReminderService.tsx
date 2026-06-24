@@ -15,17 +15,22 @@ export default function ReminderService() {
 
     const checkReminders = () => {
       const now = new Date();
+      const hasNotificationSupport = typeof window !== "undefined" && typeof Notification !== "undefined";
 
       // Check dedicated reminders
       reminders.forEach((rem) => {
         if (!rem.notified) {
           const remDate = new Date(rem.time);
           if (remDate <= now) {
-            if (Notification.permission === "granted") {
-              new Notification(rem.title || "HabitFlow Reminder", {
-                body: rem.description || "You have a reminder scheduled for now.",
-                icon: "/favicon.ico",
-              });
+            if (hasNotificationSupport && Notification.permission === "granted") {
+              try {
+                new Notification(rem.title || "HabitFlow Reminder", {
+                  body: rem.description || "You have a reminder scheduled for now.",
+                  icon: "/favicon.ico",
+                });
+              } catch (e) {
+                console.warn("Failed to trigger web notification:", e);
+              }
             }
             updateReminder(rem.id, { notified: true });
           }
@@ -37,11 +42,15 @@ export default function ReminderService() {
         if (note.reminder && !note.notified) {
           const remDate = new Date(note.reminder);
           if (remDate <= now) {
-            if (Notification.permission === "granted") {
-              new Notification(note.title || "HabitFlow Note Reminder", {
-                body: note.content || "You have a note reminder scheduled for now.",
-                icon: "/favicon.ico",
-              });
+            if (hasNotificationSupport && Notification.permission === "granted") {
+              try {
+                new Notification(note.title || "HabitFlow Note Reminder", {
+                  body: note.content || "You have a note reminder scheduled for now.",
+                  icon: "/favicon.ico",
+                });
+              } catch (e) {
+                console.warn("Failed to trigger web notification:", e);
+              }
             }
             updateNote(note.id, { notified: true });
           }

@@ -154,3 +154,34 @@
     text-align: center;
   }
 }
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: fit-content;
+  align-self: flex-start;
+}
+
+.backButton:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.backButton svg {
+  transition: transform 0.2s ease;
+}
+
+.backButton:hover svg {
+  transform: translateX(-2px);
+}

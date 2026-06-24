@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useReminders } from "@/hooks/useReminders";
 import { format } from "date-fns";
 import { Bell, Clock, Plus, Trash2, Check } from "lucide-react";
+import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 
 export default function RemindersPage() {
-  const { reminders, addReminder, deleteReminder } = useReminders();
+  const { reminders, addReminder, deleteReminder, requestPermission } = useReminders();
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+
+  useEffect(() => {
+    requestPermission();
+  }, [requestPermission]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +45,7 @@ export default function RemindersPage() {
 
   return (
     <div className="page-wrapper">
+      <Navbar />
       <main className="main-content slide-in">
         <div className={styles.container}>
           

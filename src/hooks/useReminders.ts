@@ -24,9 +24,22 @@ export interface Reminder {
   notified: boolean;
   color: string;
   icon: string;
+  notificationId?: number; // Store native notification ID for cancellation
 }
 
 const LS_KEY = "habitflow_reminders_v1";
+
+const getLocalNotifications = async () => {
+  if (typeof window !== "undefined" && (window as any).Capacitor) {
+    try {
+      const { LocalNotifications } = await import("@capacitor/local-notifications");
+      return LocalNotifications;
+    } catch (e) {
+      console.warn("Failed to load LocalNotifications plugin:", e);
+    }
+  }
+  return null;
+};
 
 export function useReminders() {
   const { user } = useAuth();
@@ -107,17 +120,102 @@ export function useReminders() {
     return () => unsubscribe();
   }, [user, loadFromLS, saveToLS]);
 
-  const requestPermission = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
+  // Synchronize reminders natively in the background on mobile
+  useEffect(() => {
+    const syncNativeNotifications = async () => {
+      const isCap = typeof window !== "undefined" && (window as any).Capacitor;
+      if (!isCap || reminders.length === 0) return;
+
+      const LocalNotifications = await getLocalNotifications();
+      if (!LocalNotifications) return;
+
+      try {
+        const pending = await LocalNotifications.getPending();
+        const pendingIds = new Set(pending.notifications.map((n) => n.id));
+
+        const nowMs = Date.now();
+        const toSchedule = [];
+
+        for (const rem of reminders) {
+          if (!rem.notified && rem.notificationId !== undefined) {
+            const remTime = new Date(rem.time).getTime();
+            if (remTime > nowMs && !pendingIds.has(rem.notificationId)) {
+              toSchedule.push({
+                id: rem.notificationId,
+                title: rem.title,
+                body: rem.description || "You have a reminder scheduled for now.",
+                schedule: { at: new Date(rem.time) },
+                iconColor: "#7c6aff",
+              });
+            }
+          }
+        }
+
+        if (toSchedule.length > 0) {
+          await LocalNotifications.schedule({ notifications: toSchedule });
+          console.log(`Synced ${toSchedule.length} reminders natively`);
+        }
+      } catch (e) {
+        console.warn("Native notification sync failed:", e);
+      }
+    };
+
+    syncNativeNotifications();
+  }, [reminders]);
+
+  const requestPermission = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    if ((window as any).Capacitor) {
+      const LocalNotifications = await getLocalNotifications();
+      if (LocalNotifications) {
+        try {
+          const check = await LocalNotifications.checkPermissions();
+          if (check.display !== "granted") {
+            await LocalNotifications.requestPermissions();
+          }
+        } catch (e) {
+          console.warn("Capacitor requestPermissions failed:", e);
+        }
+      }
+    } else if ("Notification" in window) {
       if (Notification.permission === "default") {
         await Notification.requestPermission();
       }
     }
-  };
+  }, []);
 
   const addReminder = useCallback(async (data: Omit<Reminder, "id" | "createdAtMs" | "userId" | "notified">) => {
     if (!user) return;
     await requestPermission();
+
+    let notificationId: number | undefined = undefined;
+    const isCap = typeof window !== "undefined" && (window as any).Capacitor;
+
+    if (isCap) {
+      notificationId = Math.floor(Math.random() * 2147483647);
+      const LocalNotifications = await getLocalNotifications();
+      if (LocalNotifications) {
+        try {
+          const remDate = new Date(data.time);
+          if (remDate > new Date()) {
+            await LocalNotifications.schedule({
+              notifications: [
+                {
+                  id: notificationId,
+                  title: data.title,
+                  body: data.description || "You have a reminder scheduled for now.",
+                  schedule: { at: remDate },
+                  iconColor: "#7c6aff",
+                }
+              ]
+            });
+          }
+        } catch (e) {
+          console.warn("Capacitor local notification schedule failed:", e);
+        }
+      }
+    }
 
     const newReminder: Reminder = {
       ...data,
@@ -125,6 +223,7 @@ export function useReminders() {
       userId: user.uid,
       createdAtMs: Date.now(),
       notified: false,
+      ...(notificationId !== undefined ? { notificationId } : {}),
     };
 
     if (isLocal) {
@@ -147,7 +246,7 @@ export function useReminders() {
         setIsLocal(true);
       }
     }
-  }, [user, isLocal, saveToLS]);
+  }, [user, isLocal, saveToLS, requestPermission]);
 
   const updateReminder = useCallback(async (id: string, data: Partial<Reminder>) => {
     if (!user) return;
@@ -178,6 +277,22 @@ export function useReminders() {
   const deleteReminder = useCallback(async (id: string) => {
     if (!user) return;
 
+    const targetRem = reminders.find((r) => r.id === id);
+    const isCap = typeof window !== "undefined" && (window as any).Capacitor;
+
+    if (isCap && targetRem && targetRem.notificationId !== undefined) {
+      const LocalNotifications = await getLocalNotifications();
+      if (LocalNotifications) {
+        try {
+          await LocalNotifications.cancel({
+            notifications: [{ id: targetRem.notificationId }],
+          });
+        } catch (e) {
+          console.warn("Capacitor local notification cancellation failed:", e);
+        }
+      }
+    }
+
     if (isLocal) {
       setReminders((prev) => {
         const updated = prev.filter((r) => r.id !== id);
@@ -197,7 +312,7 @@ export function useReminders() {
         setIsLocal(true);
       }
     }
-  }, [user, isLocal, saveToLS]);
+  }, [user, isLocal, saveToLS, reminders]);
 
   return { reminders, loading, addReminder, updateReminder, deleteReminder, isLocal, requestPermission };
 }

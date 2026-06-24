@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, calculateProgress } from "@/hooks/useProfile";
 import { useTheme } from "@/components/ThemeProvider";
 import { useRouter } from "next/navigation";
-import { User, Palette, Sun, Moon, Monitor, LogOut, Trophy } from "lucide-react";
+import { User, Palette, Sun, Moon, Monitor, LogOut, Trophy, ArrowLeft } from "lucide-react";
+import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useEffect } from "react";
 
@@ -37,8 +38,13 @@ export default function ProfilePage() {
 
   return (
     <div className={`page-wrapper`}>
+      <Navbar />
       <main className={`main-content slide-in`}>
         <div className={styles.container}>
+          <button className={styles.backButton} onClick={() => router.push('/dashboard')}>
+            <ArrowLeft size={16} />
+            <span>Back to Dashboard</span>
+          </button>
           <div className={styles.header}>
             <h1 className={styles.title}>Profile Settings</h1>
             <p className={styles.subtitle}>Manage your account and preferences</p>
