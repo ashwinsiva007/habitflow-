@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isCapacitor, setIsCapacitor] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isCap = !!(window as any).Capacitor || (window.location.hostname === "localhost" && !window.location.port);
+      setIsCapacitor(isCap);
+    }
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +49,12 @@ export default function SignupPage() {
     try {
       await signInWithGoogle();
       router.push("/dashboard");
-    } catch {
-      setError("Google sign-in failed. Please try again.");
+    } catch (err: any) {
+      if (err?.message === "CAPACITOR_GOOGLE_SIGNIN_UNSUPPORTED") {
+        setError("Google Sign-In is not supported in the mobile app. Please sign up with your email & password.");
+      } else {
+        setError("Google sign-in failed. Please try again.");
+      }
     } finally {
       setGoogleLoading(false);
     }
@@ -59,12 +71,25 @@ export default function SignupPage() {
         <h1 className={styles.title}>Create your account</h1>
         <p className={styles.sub}>Start building better habits today</p>
 
-        <button onClick={handleGoogle} className={styles.googleBtn} disabled={googleLoading}>
-          {googleLoading ? <span className="spinner" /> : <Globe size={18} />}
-          Continue with Google
-        </button>
-
-        <div className={styles.divider}><span>or</span></div>
+        {isCapacitor ? (
+          <div className={styles.mobileAuthNotice}>
+            <p>
+              <strong>Mobile App:</strong> Google Sign-In is not supported in the mobile APK. Please register below using an **Email & Password**.
+              <br />
+              <span style={{ fontSize: '11px', display: 'block', marginTop: '4px', opacity: 0.8 }}>
+                (Tip: You can use any name and temporary email/password combination to create an account)
+              </span>
+            </p>
+          </div>
+        ) : (
+          <>
+            <button onClick={handleGoogle} className={styles.googleBtn} disabled={googleLoading}>
+              {googleLoading ? <span className="spinner" /> : <Globe size={18} />}
+              Continue with Google
+            </button>
+            <div className={styles.divider}><span>or</span></div>
+          </>
+        )}
 
         <form onSubmit={handleSignup} className={styles.form}>
           <div className={styles.field}>

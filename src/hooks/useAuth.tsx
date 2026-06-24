@@ -6,8 +6,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
   signOut,
   updateProfile,
@@ -30,11 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Handle the redirect result when user comes back from Google sign-in
-    getRedirectResult(auth).catch(() => {
-      // Silently ignore redirect errors (e.g. user cancelled)
-    });
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
@@ -52,10 +46,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    // Check if running in Capacitor/Native app WebView
+    const isCapacitor = typeof window !== 'undefined' && (
+      (window as any).Capacitor || 
+      (window.location.hostname === 'localhost' && !window.location.port)
+    );
+
+    if (isCapacitor) {
+      throw new Error("CAPACITOR_GOOGLE_SIGNIN_UNSUPPORTED");
+    }
+
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
-    // Use redirect flow — works in both WebView (Android) and browser
-    await signInWithRedirect(auth, provider);
+    await signInWithPopup(auth, provider);
   };
 
   const logOut = async () => {

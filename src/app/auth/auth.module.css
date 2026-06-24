@@ -181,3 +181,23 @@
 .switchLink:hover {
   text-decoration: underline;
 }
+
+.mobileAuthNotice {
+  background: rgba(124, 106, 255, 0.08);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.mobileAuthNotice p {
+  margin: 0;
+}
+
+.mobileAuthNotice strong {
+  color: var(--accent);
+}
+
