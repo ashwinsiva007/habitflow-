@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   output: "export",
   images: {
     unoptimized: true,
@@ -11,6 +11,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-};
+} as any;
 
 export default nextConfig;

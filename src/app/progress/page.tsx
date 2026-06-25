@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
@@ -9,7 +9,20 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from "recharts";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import {
+  format,
+  subDays,
+  eachDayOfInterval,
+  startOfMonth,
+  endOfMonth,
+  getDay,
+  isToday,
+  isSameMonth,
+  subMonths,
+  addMonths,
+  getDate,
+} from "date-fns";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import styles from "./progress.module.css";
 
 const CAT_COLORS: Record<string, string> = {
@@ -61,6 +74,9 @@ export default function ProgressPage() {
   const router = useRouter();
   const { habits, loading } = useHabits();
 
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/auth/login");
@@ -96,6 +112,45 @@ export default function ProgressPage() {
     ? Math.round(chartData.reduce((s, d) => s + d.rate, 0) / chartData.length)
     : 0;
 
+  // Monthly heatmap calculations
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const startDayOfWeek = getDay(monthStart);
+
+  const handlePrevMonth = () => {
+    setCurrentMonth((prev) => subMonths(prev, 1));
+    setSelectedDay(null);
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth((prev) => addMonths(prev, 1));
+    setSelectedDay(null);
+  };
+
+  const getDayStats = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    const activeHabits = habits.filter((h) => {
+      if (!h.createdAtMs) return true;
+      const endOfDayMs = new Date(date).setHours(23, 59, 59, 999);
+      return h.createdAtMs <= endOfDayMs;
+    });
+
+    const completed = activeHabits.filter((h) => h.completedDates?.includes(dateStr));
+    const rate = activeHabits.length > 0 ? Math.round((completed.length / activeHabits.length) * 100) : 0;
+
+    return {
+      activeCount: activeHabits.length,
+      completedCount: completed.length,
+      rate,
+      completedList: completed,
+    };
+  };
+
+  const activeDay = selectedDay || (isSameMonth(currentMonth, new Date()) ? new Date() : monthStart);
+  const activeDayStats = getDayStats(activeDay);
+
+  const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   if (authLoading || !user) {
     return (
@@ -132,6 +187,103 @@ export default function ProgressPage() {
           </div>
         ) : (
           <>
+            {/* Heatmap Card */}
+            <div className={`${styles.heatmapCard} glass`}>
+              <div className={styles.heatmapHeader}>
+                <h2 className={styles.heatmapTitle}>
+                  <CalendarIcon size={18} color="var(--accent)" />
+                  Monthly Activity Heatmap
+                </h2>
+                <div className={styles.heatmapNav}>
+                  <button className={styles.navBtn} onClick={handlePrevMonth} title="Previous Month">
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className={styles.heatmapMonthName}>
+                    {format(currentMonth, "MMMM yyyy")}
+                  </span>
+                  <button className={styles.navBtn} onClick={handleNextMonth} title="Next Month">
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.weekdayLabels}>
+                {WEEKDAYS.map((w) => (
+                  <span key={w} className={styles.weekdayLabel}>
+                    {w.slice(0, 2)}
+                  </span>
+                ))}
+              </div>
+
+              <div className={styles.heatmapGrid}>
+                {Array.from({ length: startDayOfWeek }).map((_, i) => (
+                  <div key={`empty-${i}`} className={styles.dayCellEmpty} />
+                ))}
+
+                {monthDays.map((day) => {
+                  const dayStats = getDayStats(day);
+                  const isTodayDay = isToday(day);
+                  const isSelected = activeDay && getDate(activeDay) === getDate(day) && isSameMonth(activeDay, day);
+
+                  let opacity = 0;
+                  if (dayStats.rate > 0) {
+                    if (dayStats.rate <= 25) opacity = 0.2;
+                    else if (dayStats.rate <= 50) opacity = 0.45;
+                    else if (dayStats.rate <= 75) opacity = 0.7;
+                    else opacity = 1.0;
+                  }
+
+                  const isHighContrast = opacity > 0.6;
+
+                  return (
+                    <div
+                      key={day.toString()}
+                      className={`${styles.dayCell} ${isTodayDay ? styles.dayToday : ""} ${isSelected ? styles.daySelected : ""}`}
+                      onClick={() => setSelectedDay(day)}
+                    >
+                      {dayStats.rate > 0 && (
+                        <div
+                          className={styles.dayBg}
+                          style={{ opacity }}
+                        />
+                      )}
+                      <span className={`${styles.dayText} ${isHighContrast ? styles.dayTextHigh : ""}`}>
+                        {getDate(day)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className={styles.heatmapDetails}>
+                <div className={styles.detailsHeader}>
+                  <span>{format(activeDay, "MMMM d, yyyy")}</span>
+                  <span>{activeDayStats.rate}% consistency</span>
+                </div>
+                {activeDayStats.activeCount === 0 ? (
+                  <div className={styles.detailsEmpty}>No active habits on this day</div>
+                ) : (
+                  <div>
+                    <p style={{ margin: "4px 0 8px", fontSize: "12px", color: "var(--text-muted)" }}>
+                      Completed {activeDayStats.completedCount} of {activeDayStats.activeCount} habits:
+                    </p>
+                    {activeDayStats.completedList.length === 0 ? (
+                      <div className={styles.detailsEmpty} style={{ fontSize: "12px" }}>No habits checked off today</div>
+                    ) : (
+                      <div className={styles.detailsList}>
+                        {activeDayStats.completedList.map((h) => (
+                          <span key={h.id} className={styles.detailsTag}>
+                            <span>{h.icon}</span>
+                            <span>{h.name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Two columns: Donut + Top Streaks */}
             <div className={styles.midGrid}>
               {/* Donut chart — category breakdown */}
@@ -232,7 +384,6 @@ export default function ProgressPage() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-
           </>
         )}
       </main>

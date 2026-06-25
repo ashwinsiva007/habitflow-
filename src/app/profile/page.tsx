@@ -8,7 +8,7 @@ import { useHabits } from "@/hooks/useHabits";
 import { Palette, LogOut, Trophy, ArrowLeft, Pencil, Check, X, RotateCcw, AlertTriangle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 
 // Curated emoji set for profile avatar
@@ -20,7 +20,7 @@ const AVATAR_EMOJIS = [
 
 export default function ProfilePage() {
   const { user, logOut } = useAuth();
-  const { profile, updateProfileData } = useProfile();
+  const { profile, updateProfileData, resetProfile } = useProfile();
   const progress = calculateProgress(profile.xp);
   const { theme, setTheme, themeOptions } = useTheme();
   const { habits, resetAllHabits } = useHabits();
@@ -68,11 +68,19 @@ export default function ProfilePage() {
     setResetting(true);
     try {
       await resetAllHabits();
+      await resetProfile(); // Also reset XP/level to 0
       setShowResetConfirm(false);
       setResetInput("");
     } finally {
       setResetting(false);
     }
+  };
+
+  const handleEditOpen = () => {
+    setEditName(profile.displayName || user?.displayName || "");
+    setEditEmoji(profile.avatarEmoji || "");
+    setEditAboutMe(profile.aboutMe || "");
+    setIsEditing(true);
   };
 
   const handleEditSave = async () => {
@@ -115,15 +123,18 @@ export default function ProfilePage() {
             <p className={styles.subtitle}>Manage your account and preferences</p>
           </div>
 
-          {/* ── Bio Card ── */}
+          {/* ── Bio Card (single unified section) ── */}
           <div className={`glass ${styles.bioCard}`}>
             {/* Edit button top right */}
-            {!isEditing && (
-              <button className={styles.editBtn} onClick={() => setIsEditing(true)} id="edit-profile-btn" style={{ position: 'absolute', top: 16, right: 16 }}>
-                <Pencil size={14} />
-                Edit
-              </button>
-            )}
+            <button
+              className={styles.editBtn}
+              onClick={handleEditOpen}
+              id="edit-profile-btn"
+              style={{ position: 'absolute', top: 16, right: 16 }}
+            >
+              <Pencil size={14} />
+              Edit
+            </button>
 
             {/* Avatar + Name + Bio */}
             <div className={styles.bioTop}>
@@ -194,131 +205,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ── Account Details / Edit Panel ── */}
-          <div className={`glass ${styles.section}`}>
-            <div className={styles.sectionTitleRow}>
-              <h2 className={styles.sectionTitle}>Account Details</h2>
-              {!isEditing && (
-                <button className={styles.editBtn} onClick={() => setIsEditing(true)} id="edit-profile-btn-2">
-                  <Pencil size={14} />
-                  Edit Profile
-                </button>
-              )}
-            </div>
-
-            <div className={styles.profileInfo}>
-              {/* Avatar */}
-              <div className={styles.avatarLarge}>
-                {user.photoURL && !avatarEmoji ? (
-                  <img src={user.photoURL} alt="Avatar" className={styles.avatarImg} />
-                ) : avatarEmoji ? (
-                  <span className={styles.avatarEmoji}>{avatarEmoji}</span>
-                ) : (
-                  <span className={styles.avatarInitial}>{initial}</span>
-                )}
-              </div>
-
-              <div className={styles.userDetails}>
-                <h3 className={styles.userName}>{displayName}</h3>
-                <p className={styles.userEmail}>{user.email}</p>
-                <div className="badge" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
-                  Active Plan: Free
-                </div>
-              </div>
-            </div>
-
-            {/* Edit panel */}
-            {isEditing && (
-              <div className={styles.editPanel}>
-                {/* Name */}
-                <div className={styles.editField}>
-                  <label className={styles.editLabel}>Display Name</label>
-                  <input
-                    className={`input ${styles.editInput}`}
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Your name"
-                    id="edit-name-input"
-                    maxLength={40}
-                  />
-                </div>
-
-                {/* Emoji picker */}
-                <div className={styles.editField}>
-                  <label className={styles.editLabel}>Profile Avatar Emoji</label>
-                  <div className={styles.emojiGrid}>
-                    {/* Option to clear emoji (use initials) */}
-                    <button
-                      type="button"
-                      className={`${styles.emojiBtn} ${editEmoji === "" ? styles.emojiSelected : ""}`}
-                      onClick={() => setEditEmoji("")}
-                      title="Use initials"
-                      id="avatar-initial"
-                    >
-                      <span className={styles.emojiInitialPreview}>{initial}</span>
-                    </button>
-                    {AVATAR_EMOJIS.map((em) => (
-                      <button
-                        key={em}
-                        type="button"
-                        className={`${styles.emojiBtn} ${editEmoji === em ? styles.emojiSelected : ""}`}
-                        onClick={() => setEditEmoji(em)}
-                        id={`avatar-${em}`}
-                      >
-                        {em}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* About Me field inside edit panel */}
-                <div className={styles.editField}>
-                  <label className={styles.editLabel}>About Me</label>
-                  <textarea
-                    className={`input ${styles.editTextarea}`}
-                    value={editAboutMe}
-                    onChange={(e) => setEditAboutMe(e.target.value)}
-                    placeholder="Tell yourself a little about who you are and what you want to achieve..."
-                    id="edit-about-input"
-                    maxLength={300}
-                    rows={3}
-                  />
-                  <span className={styles.charCount}>{editAboutMe.length}/300</span>
-                </div>
-
-                {/* Actions */}
-                <div className={styles.editActions}>
-                  <button className={styles.cancelEditBtn} onClick={handleEditCancel} disabled={saving}>
-                    <X size={14} /> Cancel
-                  </button>
-                  <button className={styles.saveEditBtn} onClick={handleEditSave} disabled={saving} id="save-profile-btn">
-                    {saving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Check size={14} />}
-                    {saving ? "Saving…" : "Save Changes"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Level and XP Progress */}
-            <div className={styles.xpBar}>
-              <div className={styles.xpRow}>
-                <span className={styles.xpLevel}>
-                  <Trophy size={18} color="var(--accent)" />
-                  Level {progress.currentLevel}
-                </span>
-                <span className={styles.xpInfo}>
-                  {Math.round(progress.xpIntoLevel)} / {Math.round(progress.xpRequiredForNext)} XP
-                </span>
-              </div>
-              <div className={styles.xpTrack}>
-                <div className={styles.xpFill} style={{ width: `${progress.percentage}%` }} />
-              </div>
-            </div>
-          </div>
-
-
-
+          {/* ── Appearance ── */}
           <div className={`glass ${styles.section}`}>
             <h2 className={styles.sectionTitle}>
               <Palette size={20} className={styles.themeIcon} />
@@ -378,7 +265,7 @@ export default function ProfilePage() {
             <div className={styles.resetRow}>
               <div className={styles.logoutInfo}>
                 <h4><RotateCcw size={15} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />Reset All Data</h4>
-                <p>Delete all your habits, streaks, and progress. This cannot be undone.</p>
+                <p>Delete all habits, streaks, and XP. This cannot be undone.</p>
               </div>
               {!showResetConfirm ? (
                 <button className={`btn btn-danger`} onClick={() => setShowResetConfirm(true)} id="reset-data-btn">
@@ -395,7 +282,7 @@ export default function ProfilePage() {
               <div className={styles.resetConfirm}>
                 <div className={styles.resetWarning}>
                   <AlertTriangle size={16} color="#ef4444" />
-                  <span>This will permanently delete all <strong>{habits.length} habits</strong> and reset your progress. Type <strong>RESET</strong> below to confirm.</span>
+                  <span>This will permanently delete all <strong>{habits.length} habits</strong> and reset your XP to 0. Type <strong>RESET</strong> to confirm.</span>
                 </div>
                 <div className={styles.resetInputRow}>
                   <input
@@ -436,6 +323,88 @@ export default function ProfilePage() {
 
         </div>
       </main>
+
+      {/* ── Edit Profile Modal (bottom sheet) ── */}
+      {isEditing && (
+        <div className={styles.editOverlay} onClick={(e) => e.target === e.currentTarget && handleEditCancel()}>
+          <div className={styles.editSheet}>
+            <div className={styles.editSheetHeader}>
+              <h3 className={styles.editSheetTitle}>Edit Profile</h3>
+              <button className={styles.editSheetClose} onClick={handleEditCancel}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Name */}
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Display Name</label>
+              <input
+                className={`input ${styles.editInput}`}
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Your name"
+                id="edit-name-input"
+                maxLength={40}
+                autoFocus
+              />
+            </div>
+
+            {/* Emoji picker */}
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Profile Avatar</label>
+              <div className={styles.emojiGrid}>
+                <button
+                  type="button"
+                  className={`${styles.emojiBtn} ${editEmoji === "" ? styles.emojiSelected : ""}`}
+                  onClick={() => setEditEmoji("")}
+                  title="Use initials"
+                  id="avatar-initial"
+                >
+                  <span className={styles.emojiInitialPreview}>{initial}</span>
+                </button>
+                {AVATAR_EMOJIS.map((em) => (
+                  <button
+                    key={em}
+                    type="button"
+                    className={`${styles.emojiBtn} ${editEmoji === em ? styles.emojiSelected : ""}`}
+                    onClick={() => setEditEmoji(em)}
+                    id={`avatar-${em}`}
+                  >
+                    {em}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* About Me */}
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>About Me</label>
+              <textarea
+                className={`input ${styles.editTextarea}`}
+                value={editAboutMe}
+                onChange={(e) => setEditAboutMe(e.target.value)}
+                placeholder="Tell yourself a little about who you are and what you want to achieve..."
+                id="edit-about-input"
+                maxLength={300}
+                rows={3}
+              />
+              <span className={styles.charCount}>{editAboutMe.length}/300</span>
+            </div>
+
+            {/* Actions */}
+            <div className={styles.editActions}>
+              <button className={styles.cancelEditBtn} onClick={handleEditCancel} disabled={saving}>
+                <X size={14} /> Cancel
+              </button>
+              <button className={styles.saveEditBtn} onClick={handleEditSave} disabled={saving} id="save-profile-btn">
+                {saving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Check size={14} />}
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

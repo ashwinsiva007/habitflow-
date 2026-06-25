@@ -149,5 +149,19 @@ export function useProfile() {
     }
   }, [user, profile, isLocal]);
 
-  return { profile, loading, addXP, isLocal, updateProfileData };
+  const resetProfile = useCallback(async () => {
+    if (!user) return;
+    const resetData: UserProfile = { xp: 0, level: 1, displayName: profile.displayName, avatarEmoji: profile.avatarEmoji, aboutMe: profile.aboutMe };
+    localStorage.setItem(`habitflow_profile_${user.uid}`, JSON.stringify(resetData));
+    setProfile(resetData);
+    if (!isLocal) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), { xp: 0, level: 1 });
+      } catch {
+        setIsLocal(true);
+      }
+    }
+  }, [user, profile, isLocal]);
+
+  return { profile, loading, addXP, isLocal, updateProfileData, resetProfile };
 }

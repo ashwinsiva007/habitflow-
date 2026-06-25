@@ -162,3 +162,199 @@
 
 .empty h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
 .empty p  { font-size: 14px; color: var(--text-secondary); }
+
+/* ── Heatmap Styles ─────────────────────────────────────────── */
+.heatmapCard {
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.heatmapHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.heatmapTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heatmapNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heatmapMonthName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 110px;
+  text-align: center;
+}
+
+.navBtn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.navBtn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.weekdayLabels {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+
+.weekdayLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 4px;
+}
+
+.heatmapGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.dayCell {
+  aspect-ratio: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.dayCell:hover {
+  transform: scale(1.08);
+  z-index: 2;
+  border-color: var(--text-secondary);
+}
+
+.dayCellActive {
+  border-color: var(--accent-soft);
+}
+
+.dayBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 7px;
+  background: var(--accent);
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.dayText {
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.dayTextHigh {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.dayCellEmpty {
+  aspect-ratio: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+
+.dayToday {
+  border: 2px solid var(--text-primary) !important;
+  box-shadow: 0 0 0 2px var(--bg-card);
+}
+
+.daySelected {
+  box-shadow: 0 0 0 2px var(--accent);
+  border-color: transparent !important;
+}
+
+.heatmapDetails {
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 48px;
+  justify-content: center;
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.detailsEmpty {
+  font-style: italic;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.detailsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.detailsTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}

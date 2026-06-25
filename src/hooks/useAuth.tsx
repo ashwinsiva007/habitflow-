@@ -9,6 +9,7 @@ import {
   signOut,
   updateProfile,
   setPersistence,
+  indexedDBLocalPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
@@ -24,6 +25,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Set default persistence to indexedDB (survives app restarts on mobile/Capacitor)
+// This runs once at module load time before any sign-in
+async function initPersistence() {
+  try {
+    await setPersistence(auth, indexedDBLocalPersistence);
+  } catch {
+    // Fallback to browserLocalPersistence if indexedDB not available
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+    } catch {
+      // Last resort: no special persistence
+    }
+  }
+}
+initPersistence();
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,11 +54,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
-    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+    // Use indexedDB (persistent) when remember me, session-only when not
+    if (rememberMe) {
+      try {
+        await setPersistence(auth, indexedDBLocalPersistence);
+      } catch {
+        await setPersistence(auth, browserLocalPersistence);
+      }
+    } else {
+      await setPersistence(auth, browserSessionPersistence);
+    }
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
+    // New accounts always get persistent login
+    try {
+      await setPersistence(auth, indexedDBLocalPersistence);
+    } catch {
+      await setPersistence(auth, browserLocalPersistence);
+    }
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName: name });
   };
