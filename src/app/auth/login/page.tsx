@@ -38,7 +38,7 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem(SAVED_EMAIL_KEY);
       }
-      await signIn(email, password);
+      await signIn(email, password, rememberMe);
       router.push("/dashboard");
     } catch {
       setError("Invalid email or password. Please try again.");

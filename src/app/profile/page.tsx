@@ -2,12 +2,14 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, calculateProgress } from "@/hooks/useProfile";
-import { useTheme, THEME_OPTIONS } from "@/components/ThemeProvider";
+import { useTheme } from "@/components/ThemeProvider";
 import { useRouter } from "next/navigation";
-import { Palette, LogOut, Trophy, ArrowLeft, Pencil, Check, X } from "lucide-react";
+import { useHabits } from "@/hooks/useHabits";
+import { Palette, LogOut, Trophy, ArrowLeft, Pencil, Check, X, Flame, Calendar, Star } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 
 // Curated emoji set for profile avatar
 const AVATAR_EMOJIS = [
@@ -21,6 +23,7 @@ export default function ProfilePage() {
   const { profile, updateProfileData } = useProfile();
   const progress = calculateProgress(profile.xp);
   const { theme, setTheme, themeOptions } = useTheme();
+  const { habits } = useHabits();
   const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +31,13 @@ export default function ProfilePage() {
   const [editEmoji, setEditEmoji] = useState("");
   const [editAboutMe, setEditAboutMe] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Compute stats for bio card
+  const currentStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
+  const totalCompletions = habits.reduce((sum, h) => sum + (h.completedDates?.length || 0), 0);
+  const memberSince = user?.metadata?.creationTime
+    ? format(new Date(user.metadata.creationTime), "MMMM yyyy")
+    : "Recently";
 
   // Redirect to dashboard if not logged in
   useEffect(() => {
@@ -90,12 +100,91 @@ export default function ProfilePage() {
             <p className={styles.subtitle}>Manage your account and preferences</p>
           </div>
 
-          {/* ── Account Details ── */}
+          {/* ── Bio Card ── */}
+          <div className={`glass ${styles.bioCard}`}>
+            {/* Edit button top right */}
+            {!isEditing && (
+              <button className={styles.editBtn} onClick={() => setIsEditing(true)} id="edit-profile-btn" style={{ position: 'absolute', top: 16, right: 16 }}>
+                <Pencil size={14} />
+                Edit
+              </button>
+            )}
+
+            {/* Avatar + Name + Bio */}
+            <div className={styles.bioTop}>
+              <div className={styles.avatarLarge}>
+                {user.photoURL && !avatarEmoji ? (
+                  <img src={user.photoURL} alt="Avatar" className={styles.avatarImg} />
+                ) : avatarEmoji ? (
+                  <span className={styles.avatarEmoji}>{avatarEmoji}</span>
+                ) : (
+                  <span className={styles.avatarInitial}>{initial}</span>
+                )}
+              </div>
+              <div className={styles.bioInfo}>
+                <h2 className={styles.bioName}>{displayName}</h2>
+                <p className={styles.bioEmail}>{user.email}</p>
+                {profile.aboutMe ? (
+                  <p className={styles.bioText}>{profile.aboutMe}</p>
+                ) : (
+                  <p className={styles.bioPlaceholder}>✍️ No bio yet — tap <strong>Edit</strong> to add one!</p>
+                )}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className={styles.bioDivider} />
+
+            {/* Stats row */}
+            <div className={styles.bioStats}>
+              <div className={styles.bioStat}>
+                <span className={styles.bioStatIcon}>🔥</span>
+                <div>
+                  <p className={styles.bioStatLabel}>Current Streak</p>
+                  <p className={styles.bioStatValue}>{currentStreak} {currentStreak === 1 ? 'Day' : 'Days'}</p>
+                </div>
+              </div>
+              <div className={styles.bioStatDivider} />
+              <div className={styles.bioStat}>
+                <span className={styles.bioStatIcon}>📅</span>
+                <div>
+                  <p className={styles.bioStatLabel}>Member Since</p>
+                  <p className={styles.bioStatValue}>{memberSince}</p>
+                </div>
+              </div>
+              <div className={styles.bioStatDivider} />
+              <div className={styles.bioStat}>
+                <span className={styles.bioStatIcon}>🏆</span>
+                <div>
+                  <p className={styles.bioStatLabel}>Habits Completed</p>
+                  <p className={styles.bioStatValue}>{totalCompletions}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Level bar */}
+            <div className={styles.xpBar} style={{ marginTop: 0 }}>
+              <div className={styles.xpRow}>
+                <span className={styles.xpLevel}>
+                  <Trophy size={16} color="var(--accent)" />
+                  Level {progress.currentLevel}
+                </span>
+                <span className={styles.xpInfo}>
+                  {Math.round(progress.xpIntoLevel)} / {Math.round(progress.xpRequiredForNext)} XP
+                </span>
+              </div>
+              <div className={styles.xpTrack}>
+                <div className={styles.xpFill} style={{ width: `${progress.percentage}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Account Details / Edit Panel ── */}
           <div className={`glass ${styles.section}`}>
             <div className={styles.sectionTitleRow}>
               <h2 className={styles.sectionTitle}>Account Details</h2>
               {!isEditing && (
-                <button className={styles.editBtn} onClick={() => setIsEditing(true)} id="edit-profile-btn">
+                <button className={styles.editBtn} onClick={() => setIsEditing(true)} id="edit-profile-btn-2">
                   <Pencil size={14} />
                   Edit Profile
                 </button>
@@ -213,18 +302,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ── About Me Section ── */}
-          <div className={`glass ${styles.section}`}>
-            <h2 className={styles.sectionTitle}>About Me</h2>
-            <p className={styles.sectionDesc}>A personal note to yourself — your motivation, goals, and identity.</p>
-            {profile.aboutMe ? (
-              <p className={styles.aboutMeText}>{profile.aboutMe}</p>
-            ) : (
-              <p className={styles.aboutMePlaceholder}>
-                No bio yet. Tap <strong>Edit Profile</strong> above to add one! ✍️
-              </p>
-            )}
-          </div>
+
 
           <div className={`glass ${styles.section}`}>
             <h2 className={styles.sectionTitle}>
