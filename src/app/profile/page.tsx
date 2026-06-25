@@ -26,6 +26,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmoji, setEditEmoji] = useState("");
+  const [editAboutMe, setEditAboutMe] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Redirect to dashboard if not logged in
@@ -39,6 +40,7 @@ export default function ProfilePage() {
   useEffect(() => {
     setEditName(profile.displayName || user?.displayName || "");
     setEditEmoji(profile.avatarEmoji || "");
+    setEditAboutMe(profile.aboutMe || "");
   }, [profile, user]);
 
   if (!user) return null;
@@ -54,6 +56,7 @@ export default function ProfilePage() {
       await updateProfileData({
         displayName: editName.trim() || undefined,
         avatarEmoji: editEmoji || undefined,
+        aboutMe: editAboutMe.trim() || undefined,
       });
       setIsEditing(false);
     } finally {
@@ -64,6 +67,7 @@ export default function ProfilePage() {
   const handleEditCancel = () => {
     setEditName(profile.displayName || user?.displayName || "");
     setEditEmoji(profile.avatarEmoji || "");
+    setEditAboutMe(profile.aboutMe || "");
     setIsEditing(false);
   };
 
@@ -164,6 +168,21 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* About Me field inside edit panel */}
+                <div className={styles.editField}>
+                  <label className={styles.editLabel}>About Me</label>
+                  <textarea
+                    className={`input ${styles.editTextarea}`}
+                    value={editAboutMe}
+                    onChange={(e) => setEditAboutMe(e.target.value)}
+                    placeholder="Tell yourself a little about who you are and what you want to achieve..."
+                    id="edit-about-input"
+                    maxLength={300}
+                    rows={3}
+                  />
+                  <span className={styles.charCount}>{editAboutMe.length}/300</span>
+                </div>
+
                 {/* Actions */}
                 <div className={styles.editActions}>
                   <button className={styles.cancelEditBtn} onClick={handleEditCancel} disabled={saving}>
@@ -194,7 +213,19 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* ── Appearance — 6 Themes ── */}
+          {/* ── About Me Section ── */}
+          <div className={`glass ${styles.section}`}>
+            <h2 className={styles.sectionTitle}>About Me</h2>
+            <p className={styles.sectionDesc}>A personal note to yourself — your motivation, goals, and identity.</p>
+            {profile.aboutMe ? (
+              <p className={styles.aboutMeText}>{profile.aboutMe}</p>
+            ) : (
+              <p className={styles.aboutMePlaceholder}>
+                No bio yet. Tap <strong>Edit Profile</strong> above to add one! ✍️
+              </p>
+            )}
+          </div>
+
           <div className={`glass ${styles.section}`}>
             <h2 className={styles.sectionTitle}>
               <Palette size={20} className={styles.themeIcon} />

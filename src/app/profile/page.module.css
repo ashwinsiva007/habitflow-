@@ -477,3 +477,53 @@
     height: 22px;
   }
 }
+
+/* ── About Me Section ────────────────────────────────────────── */
+.sectionDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-top: -8px;
+}
+
+.aboutMeText {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+
+.aboutMePlaceholder {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 16px;
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.aboutMePlaceholder strong {
+  color: var(--accent);
+  font-style: normal;
+}
+
+/* ── Textarea inside edit panel ──────────────────────────────── */
+.editTextarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.charCount {
+  display: block;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

@@ -12,6 +12,7 @@ export interface UserProfile {
   level: number;
   displayName?: string;
   avatarEmoji?: string;
+  aboutMe?: string;
 }
 
 const XP_PER_HABIT = 50;
@@ -118,7 +119,7 @@ export function useProfile() {
     return leveledUp;
   }, [user, profile, isLocal]);
 
-  const updateProfileData = useCallback(async (data: { displayName?: string; avatarEmoji?: string }) => {
+  const updateProfileData = useCallback(async (data: { displayName?: string; avatarEmoji?: string; aboutMe?: string }) => {
     if (!user) return;
 
     const updatedProfile = { ...profile, ...data };

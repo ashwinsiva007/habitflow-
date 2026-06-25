@@ -10,9 +10,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from "recharts";
 import { format, subDays, eachDayOfInterval } from "date-fns";
-import { Flame, Award, TrendingUp, Target } from "lucide-react";
 import styles from "./progress.module.css";
-import Heatmap from "@/components/Heatmap";
 
 const CAT_COLORS: Record<string, string> = {
   Health: "#22d3a0", Fitness: "#f97316", Mindfulness: "#a78bfa",
@@ -44,14 +42,14 @@ function RingProgress({ value, max, color, label, sub }: { value: number; max: n
   return (
     <div className={styles.ringWrap}>
       <svg width={112} height={112} viewBox="0 0 112 112">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth={10} />
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={10}
           strokeDasharray={circumference} strokeDashoffset={offset}
           strokeLinecap="round" transform={`rotate(-90 ${cx} ${cy})`}
           style={{ transition: "stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)" }}
         />
-        <text x={cx} y={cy - 4} textAnchor="middle" fill="white" fontSize={18} fontWeight={800}>{value}</text>
-        <text x={cx} y={cy + 16} textAnchor="middle" fill="#9090b0" fontSize={11}>{sub}</text>
+        <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text-primary)" fontSize={18} fontWeight={800}>{value}</text>
+        <text x={cx} y={cy + 16} textAnchor="middle" fill="var(--text-muted)" fontSize={11}>{sub}</text>
       </svg>
       <p className={styles.ringLabel}>{label}</p>
     </div>
@@ -98,9 +96,6 @@ export default function ProgressPage() {
     ? Math.round(chartData.reduce((s, d) => s + d.rate, 0) / chartData.length)
     : 0;
 
-  const allCompletedDates = habits.reduce((acc: string[], habit) => {
-    return [...acc, ...(habit.completedDates || [])];
-  }, []);
 
   if (authLoading || !user) {
     return (
@@ -164,13 +159,13 @@ export default function ProgressPage() {
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 10, color: "#f0f0ff", fontSize: 13 }}
+                        contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text-primary)", fontSize: 13 }}
                         formatter={(v: any, name: any) => [v, name]}
                       />
                       <Legend
                         iconType="circle"
                         iconSize={10}
-                        formatter={(value) => <span style={{ color: "#c0c0d0", fontSize: 12 }}>{value}</span>}
+                        formatter={(value) => <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>{value}</span>}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -226,23 +221,18 @@ export default function ProgressPage() {
                       <stop offset="95%" stopColor="#22d3a0" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="date" tick={{ fill: "#9090b0", fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis tick={{ fill: "#9090b0", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} unit="%" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="date" tick={{ fill: "var(--text-muted)" as any, fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                  <YAxis tick={{ fill: "var(--text-muted)" as any, fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} unit="%" />
                   <Tooltip
-                    contentStyle={{ background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 10, color: "#f0f0ff", fontSize: 13 }}
+                    contentStyle={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 10, color: "var(--text-primary)", fontSize: 13 }}
                     formatter={(v: any, key: any) => [key === "rate" ? `${v}%` : v, key === "rate" ? "Completion Rate" : "Completed"]}
                   />
-                  <Area type="monotone" dataKey="rate" stroke="#7c6aff" strokeWidth={2.5} fill="url(#rateGrad)" dot={false} activeDot={{ r: 5, fill: "#7c6aff" }} />
+                  <Area type="monotone" dataKey="rate" stroke="var(--accent)" strokeWidth={2.5} fill="url(#rateGrad)" dot={false} activeDot={{ r: 5, fill: "var(--accent)" }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
 
-            {/* GitHub-style Heatmap */}
-            <div className={`${styles.chartCard} glass`}>
-              <h2 className={styles.chartTitle}>🗓️ 6-Month Activity Heatmap</h2>
-              <Heatmap completedDates={allCompletedDates} daysToShow={180} />
-            </div>
           </>
         )}
       </main>

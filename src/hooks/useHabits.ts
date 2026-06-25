@@ -9,8 +9,6 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  query,
-  where,
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -64,6 +62,12 @@ export function useHabits() {
     }
   }, [getLSKey]);
 
+  // Returns the Firestore path: users/{uid}/habits
+  const habitsCol = useCallback(() => {
+    if (!user) return null;
+    return collection(db, "users", user.uid, "habits");
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       setHabits([]);
@@ -75,17 +79,15 @@ export function useHabits() {
     let unsubscribe = () => {};
 
     try {
-      const q = query(
-        collection(db, "habits"),
-        where("userId", "==", user.uid)
-      );
+      const col = habitsCol();
+      if (!col) return;
 
       unsubscribe = onSnapshot(
-        q,
+        col,
         (snapshot) => {
-          const habitsData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
+          const habitsData = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
           })) as Habit[];
 
           habitsData.sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
@@ -95,7 +97,7 @@ export function useHabits() {
           saveToLS(habitsData);
         },
         (error) => {
-          console.warn("Firestore habits query failed (probably rules), using localStorage fallback:", error.message);
+          console.warn("Firestore habits query failed, using localStorage fallback:", error.message);
           const cached = loadFromLS();
           setHabits(cached);
           setIsLocal(true);
@@ -111,7 +113,7 @@ export function useHabits() {
     }
 
     return () => unsubscribe();
-  }, [user, loadFromLS, saveToLS]);
+  }, [user, loadFromLS, saveToLS, habitsCol]);
 
   const addHabit = useCallback(
     async (habitData: Omit<Habit, "id" | "userId" | "createdAtMs" | "streak" | "longestStreak" | "completedDates">) => {
@@ -134,8 +136,11 @@ export function useHabits() {
         });
       } else {
         try {
+          const col = habitsCol();
+          if (!col) return;
+          // Store without local id; Firestore will assign a doc id
           const { id, ...firebaseData } = newHabit;
-          await addDoc(collection(db, "habits"), firebaseData);
+          await addDoc(col, firebaseData);
         } catch (err) {
           console.warn("Firestore add failed, writing locally:", err);
           setHabits((prev) => {
@@ -147,7 +152,7 @@ export function useHabits() {
         }
       }
     },
-    [user, isLocal, saveToLS]
+    [user, isLocal, saveToLS, habitsCol]
   );
 
   const updateHabit = useCallback(async (id: string, data: Partial<Habit>) => {
@@ -161,7 +166,7 @@ export function useHabits() {
       });
     } else {
       try {
-        const habitDoc = doc(db, "habits", id);
+        const habitDoc = doc(db, "users", user.uid, "habits", id);
         await updateDoc(habitDoc, data);
       } catch (err) {
         console.warn("Firestore update failed, updating locally:", err);
@@ -186,7 +191,7 @@ export function useHabits() {
       });
     } else {
       try {
-        await deleteDoc(doc(db, "habits", id));
+        await deleteDoc(doc(db, "users", user.uid, "habits", id));
       } catch (err) {
         console.warn("Firestore delete failed, deleting locally:", err);
         setHabits((prev) => {
@@ -222,7 +227,7 @@ export function useHabits() {
       });
     } else {
       try {
-        await updateDoc(doc(db, "habits", habit.id), streakData);
+        await updateDoc(doc(db, "users", user.uid, "habits", habit.id), streakData);
       } catch (err) {
         console.warn("Firestore toggleCompletion failed, toggling locally:", err);
         setHabits((prev) => {
