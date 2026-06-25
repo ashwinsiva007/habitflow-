@@ -1,7 +1,7 @@
 "use client";
 
 import { Habit } from "@/hooks/useHabits";
-import { Flame, CheckCircle2, Circle, Trash2, Pencil } from "lucide-react";
+import { Flame, CheckCircle2, Circle, Trash2, Pencil, XCircle, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import styles from "./HabitCard.module.css";
 
@@ -10,6 +10,7 @@ interface HabitCardProps {
   onToggle: (habit: Habit) => void;
   onEdit: (habit: Habit) => void;
   onDelete: (id: string) => void;
+  onLogSkip?: (habit: Habit) => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -30,14 +31,38 @@ function freqDisplay(habit: Habit): string {
   return base;
 }
 
-export default function HabitCard({ habit, onToggle, onEdit, onDelete }: HabitCardProps) {
+export default function HabitCard({ habit, onToggle, onEdit, onDelete, onLogSkip }: HabitCardProps) {
   const today = format(new Date(), "yyyy-MM-dd");
   const isCompletedToday = habit.completedDates?.includes(today);
-  const categoryColor = CATEGORY_COLORS[habit.category] || "#9090b0";
+  const categoryColor = habit.isNegative ? "#ef4444" : (CATEGORY_COLORS[habit.category] || "#9090b0");
+  const hasSkipToday = habit.skipReasons?.[today];
+
+  // Recovery mode progress
+  const recoveryProgress = habit.recoveryMode
+    ? (habit.recoveryDays?.length || 0)
+    : 0;
 
   return (
-    <div className={`${styles.card} ${isCompletedToday ? styles.completed : ""} fade-in`}>
+    <div className={`${styles.card} ${isCompletedToday ? styles.completed : ""} ${habit.isNegative ? styles.negative : ""} fade-in`}>
       <div className={styles.colorBar} style={{ background: categoryColor }} />
+
+      {/* Recovery Mode Banner */}
+      {habit.recoveryMode && !isCompletedToday && (
+        <div className={styles.recoveryBanner}>
+          <RotateCcw size={13} />
+          <span>
+            🔄 Recovery Mode — {recoveryProgress}/3 days to restore your {habit.previousStreak}-day streak!
+          </span>
+        </div>
+      )}
+
+      {/* Negative Habit Banner */}
+      {habit.isNegative && (
+        <div className={styles.negativeBanner}>
+          <XCircle size={13} />
+          <span>Break-the-habit tracker</span>
+        </div>
+      )}
 
       <div className={styles.body}>
         <div className={styles.top}>
@@ -63,8 +88,15 @@ export default function HabitCard({ habit, onToggle, onEdit, onDelete }: HabitCa
 
         <div className={styles.bottom}>
           <div className={styles.meta}>
-            <span className={styles.badge} style={{ color: categoryColor, background: `${categoryColor}18`, border: `1px solid ${categoryColor}30` }}>
-              {habit.category}
+            <span
+              className={styles.badge}
+              style={
+                habit.isNegative
+                  ? { color: "#ef4444", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }
+                  : { color: categoryColor, background: `${categoryColor}18`, border: `1px solid ${categoryColor}30` }
+              }
+            >
+              {habit.isNegative ? "⛔ Break habit" : habit.category}
             </span>
             <span className={styles.frequency}>{freqDisplay(habit)}</span>
           </div>
@@ -77,17 +109,34 @@ export default function HabitCard({ habit, onToggle, onEdit, onDelete }: HabitCa
               </span>
             </div>
 
-            <button
-              onClick={() => onToggle(habit)}
-              className={`${styles.checkBtn} ${isCompletedToday ? styles.checkDone : ""}`}
-              title={isCompletedToday ? "Mark incomplete" : "Mark complete"}
-            >
-              {isCompletedToday ? (
-                <><CheckCircle2 size={18} /> Done</>
-              ) : (
-                <><Circle size={18} /> Mark done</>
+            <div className={styles.btnGroup}>
+              {/* Skip reason button — only for positive habits, only if not completed */}
+              {!habit.isNegative && !isCompletedToday && onLogSkip && (
+                <button
+                  onClick={() => onLogSkip(habit)}
+                  className={`${styles.skipBtn} ${hasSkipToday ? styles.skipBtnActive : ""}`}
+                  title={hasSkipToday ? `Skipped: ${hasSkipToday}` : "Log skip reason"}
+                >
+                  {hasSkipToday ? "📝 Skipped" : "Skip?"}
+                </button>
               )}
-            </button>
+
+              <button
+                onClick={() => onToggle(habit)}
+                className={`${styles.checkBtn} ${isCompletedToday ? styles.checkDone : ""} ${habit.isNegative ? styles.negativeCheck : ""}`}
+                title={
+                  habit.isNegative
+                    ? (isCompletedToday ? "Mark as done (I did it)" : "I avoided it today ✓")
+                    : (isCompletedToday ? "Mark incomplete" : "Mark complete")
+                }
+              >
+                {isCompletedToday ? (
+                  <><CheckCircle2 size={18} />{habit.isNegative ? "Avoided ✓" : "Done"}</>
+                ) : (
+                  <><Circle size={18} />{habit.isNegative ? "I avoided it" : "Mark done"}</>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

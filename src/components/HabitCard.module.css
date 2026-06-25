@@ -184,3 +184,82 @@
   border-color: rgba(34, 211, 160, 0.2);
   color: var(--text-muted);
 }
+
+/* ── Negative habit ─────────────────────────────────────── */
+.negative {
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.negativeBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+  padding: 6px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.negativeCheck {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+.negativeCheck:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* ── Recovery mode banner ───────────────────────────────── */
+.recoveryBanner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(251, 191, 36, 0.1);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+  padding: 7px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f59e0b;
+  line-height: 1.4;
+}
+
+/* ── Skip & Check button group ──────────────────────────── */
+.btnGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skipBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px dashed var(--border-light);
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+.skipBtn:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.08);
+}
+.skipBtnActive {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-style: solid !important;
+}
+

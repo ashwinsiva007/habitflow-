@@ -5,7 +5,7 @@ import { useProfile, calculateProgress } from "@/hooks/useProfile";
 import { useTheme } from "@/components/ThemeProvider";
 import { useRouter } from "next/navigation";
 import { useHabits } from "@/hooks/useHabits";
-import { Palette, LogOut, Trophy, ArrowLeft, Pencil, Check, X, Flame, Calendar, Star } from "lucide-react";
+import { Palette, LogOut, Trophy, ArrowLeft, Pencil, Check, X, RotateCcw, AlertTriangle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const { profile, updateProfileData } = useProfile();
   const progress = calculateProgress(profile.xp);
   const { theme, setTheme, themeOptions } = useTheme();
-  const { habits } = useHabits();
+  const { habits, resetAllHabits } = useHabits();
   const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -31,6 +31,9 @@ export default function ProfilePage() {
   const [editEmoji, setEditEmoji] = useState("");
   const [editAboutMe, setEditAboutMe] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetInput, setResetInput] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   // Compute stats for bio card
   const currentStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak || 0)) : 0;
@@ -58,6 +61,18 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     await logOut();
     router.push("/auth");
+  };
+
+  const handleReset = async () => {
+    if (resetInput.trim().toUpperCase() !== "RESET") return;
+    setResetting(true);
+    try {
+      await resetAllHabits();
+      setShowResetConfirm(false);
+      setResetInput("");
+    } finally {
+      setResetting(false);
+    }
   };
 
   const handleEditSave = async () => {
@@ -356,6 +371,53 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* ── Reset Data ── */}
+          <div className={`glass ${styles.section} ${styles.dangerZone}`}>
+            <div className={styles.resetRow}>
+              <div className={styles.logoutInfo}>
+                <h4><RotateCcw size={15} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />Reset All Data</h4>
+                <p>Delete all your habits, streaks, and progress. This cannot be undone.</p>
+              </div>
+              {!showResetConfirm ? (
+                <button className={`btn btn-danger`} onClick={() => setShowResetConfirm(true)} id="reset-data-btn">
+                  <RotateCcw size={16} />
+                  Reset
+                </button>
+              ) : (
+                <button className={`btn btn-danger`} onClick={() => { setShowResetConfirm(false); setResetInput(""); }}>
+                  <X size={16} /> Cancel
+                </button>
+              )}
+            </div>
+            {showResetConfirm && (
+              <div className={styles.resetConfirm}>
+                <div className={styles.resetWarning}>
+                  <AlertTriangle size={16} color="#ef4444" />
+                  <span>This will permanently delete all <strong>{habits.length} habits</strong> and reset your progress. Type <strong>RESET</strong> below to confirm.</span>
+                </div>
+                <div className={styles.resetInputRow}>
+                  <input
+                    className={`input ${styles.resetInput}`}
+                    type="text"
+                    placeholder="Type RESET to confirm"
+                    value={resetInput}
+                    onChange={(e) => setResetInput(e.target.value)}
+                    id="reset-confirm-input"
+                  />
+                  <button
+                    className={styles.resetConfirmBtn}
+                    onClick={handleReset}
+                    disabled={resetInput.trim().toUpperCase() !== "RESET" || resetting}
+                    id="reset-confirm-btn"
+                  >
+                    {resetting ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <RotateCcw size={14} />}
+                    {resetting ? "Resetting…" : "Confirm Reset"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Sign Out ── */}

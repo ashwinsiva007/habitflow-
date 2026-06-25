@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import {
   collection,
   addDoc,
@@ -10,6 +10,8 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
+  writeBatch,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -29,6 +31,12 @@ export interface Habit {
   streak: number;
   longestStreak: number;
   completedDates: string[];
+  // New fields
+  isNegative?: boolean;           // If true, this is a "break the habit" tracker
+  skipReasons?: Record<string, string>; // date → skip reason
+  recoveryMode?: boolean;         // Streak broken, recovery challenge active
+  recoveryDays?: string[];        // Days completed during recovery
+  previousStreak?: number;        // Streak before it broke (for recovery goal display)
 }
 
 export function useHabits() {
@@ -126,6 +134,10 @@ export function useHabits() {
         streak: 0,
         longestStreak: 0,
         completedDates: [],
+        skipReasons: {},
+        isNegative: habitData.isNegative || false,
+        recoveryMode: false,
+        recoveryDays: [],
       };
 
       if (isLocal) {
@@ -138,7 +150,6 @@ export function useHabits() {
         try {
           const col = habitsCol();
           if (!col) return;
-          // Store without local id; Firestore will assign a doc id
           const { id, ...firebaseData } = newHabit;
           await addDoc(col, firebaseData);
         } catch (err) {
@@ -204,6 +215,42 @@ export function useHabits() {
     }
   }, [user, isLocal, saveToLS]);
 
+  // Reset ALL habits + XP data for fresh start
+  const resetAllHabits = useCallback(async () => {
+    if (!user) return;
+
+    if (isLocal) {
+      setHabits([]);
+      saveToLS([]);
+    } else {
+      try {
+        const col = habitsCol();
+        if (!col) return;
+        const snapshot = await getDocs(col);
+        const batch = writeBatch(db);
+        snapshot.docs.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+        // Also clear LS cache
+        saveToLS([]);
+      } catch (err) {
+        console.warn("Firestore batch delete failed:", err);
+        setHabits([]);
+        saveToLS([]);
+        setIsLocal(true);
+      }
+    }
+  }, [user, isLocal, habitsCol, saveToLS]);
+
+  // Log a skip reason for a specific habit + date
+  const logSkipReason = useCallback(async (habitId: string, date: string, reason: string) => {
+    if (!user) return;
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    const updatedReasons = { ...(habit.skipReasons || {}), [date]: reason };
+    await updateHabit(habitId, { skipReasons: updatedReasons });
+  }, [user, habits, updateHabit]);
+
   const toggleCompletion = useCallback(async (habit: Habit, addXP?: (amount?: number) => Promise<boolean | undefined>) => {
     if (!user) return;
     const today = format(new Date(), "yyyy-MM-dd");
@@ -212,11 +259,51 @@ export function useHabits() {
     const newDates = isCompleted
       ? completedDates.filter((d) => d !== today)
       : [...completedDates, today];
-    const streak = calculateStreak(newDates);
+    const newStreak = calculateStreak(newDates);
+
+    // Recovery Mode logic: 3 consecutive days = restore old streak
+    let recoveryMode = habit.recoveryMode || false;
+    let recoveryDays = [...(habit.recoveryDays || [])];
+    let previousStreak = habit.previousStreak || 0;
+
+    if (!isCompleted && recoveryMode) {
+      // Add today to recovery days
+      if (!recoveryDays.includes(today)) recoveryDays.push(today);
+      // Check if 3 consecutive recovery days achieved
+      if (recoveryDays.length >= 3) {
+        const sorted = [...recoveryDays].sort();
+        const last3 = sorted.slice(-3);
+        const isConsecutive = last3.every((d, i) => {
+          if (i === 0) return true;
+          const prev = new Date(last3[i - 1]);
+          const curr = new Date(d);
+          return (curr.getTime() - prev.getTime()) === 86400000;
+        });
+        if (isConsecutive) {
+          recoveryMode = false;
+          recoveryDays = [];
+          previousStreak = 0;
+        }
+      }
+    }
+
+    // Detect streak break: streak was positive yesterday, now 0
+    const wasStreakActive = (habit.streak || 0) > 3;
+    const streakBroke = isCompleted === false && wasStreakActive && newStreak === 0;
+
+    if (streakBroke && !recoveryMode) {
+      recoveryMode = true;
+      recoveryDays = [];
+      previousStreak = habit.streak || 0;
+    }
+
     const streakData = {
       completedDates: newDates,
-      streak,
-      longestStreak: Math.max(habit.longestStreak || 0, streak),
+      streak: newStreak,
+      longestStreak: Math.max(habit.longestStreak || 0, newStreak),
+      recoveryMode,
+      recoveryDays,
+      previousStreak,
     };
 
     if (isLocal) {
@@ -245,21 +332,21 @@ export function useHabits() {
     }
   }, [user, isLocal, saveToLS]);
 
-  return { habits, loading, addHabit, updateHabit, deleteHabit, toggleCompletion, isLocal };
+  return { habits, loading, addHabit, updateHabit, deleteHabit, toggleCompletion, resetAllHabits, logSkipReason, isLocal };
 }
 
 function calculateStreak(dates: string[]): number {
   if (!dates.length) return 0;
   const sorted = [...dates].sort((a, b) => b.localeCompare(a));
   const today = format(new Date(), "yyyy-MM-dd");
-  const yesterday = format(new Date(Date.now() - 86400000), "yyyy-MM-dd");
+  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
   let streak = 0;
-  let current = sorted[0] === today ? new Date() : new Date(Date.now() - 86400000);
+  let current = sorted[0] === today ? new Date() : subDays(new Date(), 1);
   for (const date of sorted) {
     if (date === format(current, "yyyy-MM-dd")) {
       streak++;
-      current = new Date(current.getTime() - 86400000);
+      current = subDays(current, 1);
     } else break;
   }
   return streak;

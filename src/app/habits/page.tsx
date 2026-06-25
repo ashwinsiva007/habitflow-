@@ -8,7 +8,9 @@ import { useProfile } from "@/hooks/useProfile";
 import Navbar from "@/components/Navbar";
 import HabitCard from "@/components/HabitCard";
 import HabitForm from "@/components/HabitForm";
+import SkipReasonModal from "@/components/SkipReasonModal";
 import { Plus, Filter } from "lucide-react";
+import { format } from "date-fns";
 import styles from "./habits.module.css";
 
 const CATEGORIES = ["All", "Health", "Fitness", "Mindfulness", "Work", "Learning", "Social", "Other"];
@@ -16,7 +18,7 @@ const CATEGORIES = ["All", "Health", "Fitness", "Mindfulness", "Work", "Learning
 export default function HabitsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { habits, loading, addHabit, updateHabit, deleteHabit, toggleCompletion } = useHabits();
+  const { habits, loading, addHabit, updateHabit, deleteHabit, toggleCompletion, logSkipReason } = useHabits();
   const { addXP } = useProfile();
 
   useEffect(() => {
@@ -28,12 +30,21 @@ export default function HabitsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [filter, setFilter] = useState("All");
+  const [skipHabit, setSkipHabit] = useState<Habit | null>(null);
 
+  const today = format(new Date(), "yyyy-MM-dd");
   const filtered = filter === "All" ? habits : habits.filter((h) => h.category === filter);
 
   const handleEditSave = async (data: Omit<Habit, "id" | "userId" | "createdAtMs" | "streak" | "longestStreak" | "completedDates">) => {
     if (editingHabit) await updateHabit(editingHabit.id, data);
     setEditingHabit(null);
+  };
+
+  const handleSkipSave = async (reason: string) => {
+    if (skipHabit) {
+      await logSkipReason(skipHabit.id, today, reason);
+      setSkipHabit(null);
+    }
   };
 
   if (authLoading || !user) {
@@ -95,6 +106,7 @@ export default function HabitsPage() {
                 onToggle={(habit) => toggleCompletion(habit, addXP)}
                 onEdit={setEditingHabit}
                 onDelete={deleteHabit}
+                onLogSkip={(h) => setSkipHabit(h)}
               />
             ))}
           </div>
@@ -103,6 +115,15 @@ export default function HabitsPage() {
 
       {showForm && <HabitForm title="New Habit" onSave={addHabit} onCancel={() => setShowForm(false)} />}
       {editingHabit && <HabitForm title="Edit Habit" initial={editingHabit} onSave={handleEditSave} onCancel={() => setEditingHabit(null)} />}
+      {skipHabit && (
+        <SkipReasonModal
+          habitName={skipHabit.name}
+          habitIcon={skipHabit.icon}
+          date={today}
+          onSave={handleSkipSave}
+          onDismiss={() => setSkipHabit(null)}
+        />
+      )}
     </div>
   );
 }

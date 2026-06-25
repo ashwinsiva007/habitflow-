@@ -60,16 +60,15 @@ interface HabitFormProps {
 }
 
 export default function HabitForm({ initial, onSave, onCancel, title = "New Habit" }: HabitFormProps) {
-  const [icon,      setIcon]      = useState(initial?.icon      || "⭐");
-  const [name,      setName]      = useState(initial?.name      || "");
-  const [desc,      setDesc]      = useState(initial?.description|| "");
-  const [category,  setCategory]  = useState(initial?.category  || "Health");
-  const [frequency, setFrequency] = useState<FrequencyType>(initial?.frequency || "daily");
-  const [freqDays,  setFreqDays]  = useState<string[]>(
-    initial?.frequencyDays ?? DAYS
-  );
-  const [saving,    setSaving]    = useState(false);
-  const [error,     setError]     = useState("");
+  const [icon,        setIcon]      = useState(initial?.icon        || "⭐");
+  const [name,        setName]      = useState(initial?.name        || "");
+  const [desc,        setDesc]      = useState(initial?.description || "");
+  const [category,    setCategory]  = useState(initial?.category    || "Health");
+  const [frequency,   setFrequency] = useState<FrequencyType>(initial?.frequency || "daily");
+  const [freqDays,    setFreqDays]  = useState<string[]>(initial?.frequencyDays ?? DAYS);
+  const [isNegative,  setIsNegative]= useState(initial?.isNegative  || false);
+  const [saving,      setSaving]    = useState(false);
+  const [error,       setError]     = useState("");
 
   const handleFreqSelect = (opt: typeof FREQ_OPTIONS[0]) => {
     setFrequency(opt.id);
@@ -96,7 +95,7 @@ export default function HabitForm({ initial, onSave, onCancel, title = "New Habi
     setSaving(true);
     try {
       const finalDays = showDayPicker ? freqDays : (FREQ_OPTIONS.find(f=>f.id===frequency)?.days ?? DAYS);
-      await onSave({ name: name.trim(), description: desc.trim(), category, frequency, frequencyDays: finalDays, color: "", icon });
+      await onSave({ name: name.trim(), description: desc.trim(), category, frequency, frequencyDays: finalDays, color: "", icon, isNegative });
       onCancel();
     } catch {
       setError("Failed to save habit. Please try again.");
@@ -115,6 +114,36 @@ export default function HabitForm({ initial, onSave, onCancel, title = "New Habi
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* Habit Type Toggle */}
+          <div className={styles.section}>
+            <p className={styles.label}>Habit Type</p>
+            <div className={styles.typeToggle}>
+              <button
+                type="button"
+                className={`${styles.typeBtn} ${!isNegative ? styles.typeBtnActive : ""}`}
+                onClick={() => setIsNegative(false)}
+              >
+                <span>✅</span>
+                <span>Build a habit</span>
+                <span className={styles.typeHint}>Something you want TO DO</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.typeBtn} ${isNegative ? styles.typeBtnNegActive : ""}`}
+                onClick={() => setIsNegative(true)}
+              >
+                <span>⛔</span>
+                <span>Break a habit</span>
+                <span className={styles.typeHint}>Something you want to STOP</span>
+              </button>
+            </div>
+            {isNegative && (
+              <p className={styles.negativeHint}>
+                💡 Tick ✓ each day you successfully avoided this habit.
+              </p>
+            )}
+          </div>
+
           {/* Icon picker */}
           <div className={styles.section}>
             <p className={styles.label}>Choose an icon</p>

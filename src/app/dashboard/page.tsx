@@ -9,6 +9,8 @@ import Navbar from "@/components/Navbar";
 import HabitCard from "@/components/HabitCard";
 import HabitForm from "@/components/HabitForm";
 import DailyQuoteModal from "@/components/DailyQuoteModal";
+import SkipReasonModal from "@/components/SkipReasonModal";
+import MonthlyReportModal from "@/components/MonthlyReportModal";
 import { Flame, CheckCircle2, TrendingUp, Plus, Target, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import styles from "./dashboard.module.css";
@@ -17,7 +19,7 @@ import styles from "./dashboard.module.css";
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { habits, loading: habitsLoading, addHabit, updateHabit, deleteHabit, toggleCompletion } = useHabits();
+  const { habits, loading: habitsLoading, addHabit, updateHabit, deleteHabit, toggleCompletion, logSkipReason } = useHabits();
   const { profile, addXP } = useProfile();
 
   const progress = calculateProgress(profile.xp);
@@ -30,6 +32,7 @@ export default function DashboardPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [skipHabit, setSkipHabit] = useState<Habit | null>(null);
 
   const today = format(new Date(), "yyyy-MM-dd");
   const todayDisplay = format(new Date(), "EEEE, MMMM d");
@@ -45,6 +48,13 @@ export default function DashboardPage() {
     setEditingHabit(null);
   };
 
+  const handleSkipSave = async (reason: string) => {
+    if (skipHabit) {
+      await logSkipReason(skipHabit.id, today, reason);
+      setSkipHabit(null);
+    }
+  };
+
   if (authLoading || !user) {
     return (
       <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", background: "#0a0a0f" }}>
@@ -56,6 +66,7 @@ export default function DashboardPage() {
   return (
     <div className="page-wrapper">
       <DailyQuoteModal />
+      <MonthlyReportModal habits={habits} userName={user.displayName || "there"} />
       <Navbar />
       <main className="main-content">
         {/* Header */}
@@ -147,6 +158,7 @@ export default function DashboardPage() {
                   onToggle={(habit) => toggleCompletion(habit, addXP)}
                   onEdit={handleEdit}
                   onDelete={deleteHabit}
+                  onLogSkip={(h) => setSkipHabit(h)}
                 />
               ))}
             </div>
@@ -168,6 +180,16 @@ export default function DashboardPage() {
           initial={editingHabit}
           onSave={handleEditSave}
           onCancel={() => setEditingHabit(null)}
+        />
+      )}
+
+      {skipHabit && (
+        <SkipReasonModal
+          habitName={skipHabit.name}
+          habitIcon={skipHabit.icon}
+          date={today}
+          onSave={handleSkipSave}
+          onDismiss={() => setSkipHabit(null)}
         />
       )}
     </div>
