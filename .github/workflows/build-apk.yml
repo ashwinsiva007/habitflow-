@@ -35,17 +35,9 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:305596604242:web:33f2c03efd8ec61f6b248b"
         run: npx next build
 
-      - name: Install Capacitor CLI
-        run: npm install -g @capacitor/cli
-
-      - name: Initialize Capacitor
-        run: npx cap init HabitFlow com.habitflow.app --web-dir=out
-
-      - name: Add Android Platform
-        run: npx cap add android
-
       - name: Sync Capacitor
         run: npx cap sync android
+
 
       - name: Build Android Debug APK
         run: |
