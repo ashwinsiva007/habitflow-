@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 
+/* ═══════════════════════════════════════════════════════════════
+   BASE (Dark Purple — default)
+══════════════════════════════════════════════════════════════════ */
 :root {
   --bg-primary: #0a0a0f;
   --bg-secondary: #111118;
@@ -23,8 +26,114 @@
   --radius-sm: 10px;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
+
+  /* Theme identifier colors (for swatches in profile) */
+  --swatch-1: #7c6aff;
+  --swatch-2: #06b6d4;
+  --swatch-3: #f97316;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   DARK PURPLE (same as :root default)
+══════════════════════════════════════════════════════════════════ */
+:root[data-theme='dark-purple'] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: #16161f;
+  --bg-card-hover: #1c1c28;
+  --border: #2a2a3a;
+  --border-light: #333345;
+  --text-primary: #f0f0ff;
+  --text-secondary: #9090b0;
+  --text-muted: #5a5a7a;
+  --accent: #7c6aff;
+  --accent-hover: #9580ff;
+  --accent-soft: rgba(124, 106, 255, 0.15);
+  --success: #22d3a0;
+  --success-soft: rgba(34, 211, 160, 0.15);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK OCEAN (Dark + Cyan/Teal accent)
+══════════════════════════════════════════════════════════════════ */
+:root[data-theme='dark-ocean'] {
+  --bg-primary: #030d14;
+  --bg-secondary: #071525;
+  --bg-card: #0b1e30;
+  --bg-card-hover: #0f2840;
+  --border: #1a3348;
+  --border-light: #234560;
+  --text-primary: #e0f4ff;
+  --text-secondary: #7ab0cc;
+  --text-muted: #3a6080;
+  --accent: #06b6d4;
+  --accent-hover: #22d3ee;
+  --accent-soft: rgba(6, 182, 212, 0.15);
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.7);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK SUNSET (Dark + Warm Orange/Red accent)
+══════════════════════════════════════════════════════════════════ */
+:root[data-theme='dark-sunset'] {
+  --bg-primary: #0f0805;
+  --bg-secondary: #1a1008;
+  --bg-card: #221508;
+  --bg-card-hover: #2d1c0b;
+  --border: #3d2810;
+  --border-light: #553618;
+  --text-primary: #fff4e0;
+  --text-secondary: #c09060;
+  --text-muted: #7a5030;
+  --accent: #f97316;
+  --accent-hover: #fb923c;
+  --accent-soft: rgba(249, 115, 22, 0.15);
+  --success: #22d3a0;
+  --success-soft: rgba(34, 211, 160, 0.15);
+  --warning: #fbbf24;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.65);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT PURPLE (Light + Purple accent)
+══════════════════════════════════════════════════════════════════ */
+:root[data-theme='light-purple'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-light: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-soft: rgba(99, 102, 241, 0.12);
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.08);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.1);
+}
+
+/* Legacy: keep 'light' working the same as light-purple */
 :root[data-theme='light'] {
   --bg-primary: #f8fafc;
   --bg-secondary: #f1f5f9;
@@ -37,14 +146,64 @@
   --text-muted: #94a3b8;
   --accent: #6366f1;
   --accent-hover: #4f46e5;
-  --accent-soft: rgba(99, 102, 241, 0.15);
+  --accent-soft: rgba(99, 102, 241, 0.12);
   --success: #10b981;
-  --success-soft: rgba(16, 185, 129, 0.15);
+  --success-soft: rgba(16, 185, 129, 0.12);
   --warning: #f59e0b;
   --danger: #ef4444;
-  --danger-soft: rgba(239, 68, 68, 0.12);
+  --danger-soft: rgba(239, 68, 68, 0.08);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT OCEAN (Light + Cyan/Teal accent)
+══════════════════════════════════════════════════════════════════ */
+:root[data-theme='light-ocean'] {
+  --bg-primary: #f0fafa;
+  --bg-secondary: #e0f2f7;
+  --bg-card: #ffffff;
+  --bg-card-hover: #e8f8fc;
+  --border: #bae6f5;
+  --border-light: #7dd3ee;
+  --text-primary: #0c2333;
+  --text-secondary: #2d7a9a;
+  --text-muted: #7ab5cc;
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-soft: rgba(8, 145, 178, 0.12);
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.08);
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT SUNSET (Light + Warm Orange accent)
+══════════════════════════════════════════════════════════════════ */
+:root[data-theme='light-sunset'] {
+  --bg-primary: #fffbf5;
+  --bg-secondary: #fef3e2;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fef0d8;
+  --border: #fed7aa;
+  --border-light: #fdba74;
+  --text-primary: #1c0f00;
+  --text-secondary: #7c4f20;
+  --text-muted: #c49060;
+  --accent: #ea6800;
+  --accent-hover: #c45600;
+  --accent-soft: rgba(234, 104, 0, 0.12);
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --warning: #fbbf24;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.08);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.07);
 }
 
 * {
@@ -206,7 +365,7 @@ html, body {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #7c6aff 0%, #22d3a0 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -267,4 +426,3 @@ html, body {
   animation: fadeIn 0.2s ease;
   box-shadow: var(--shadow-lg);
 }
-

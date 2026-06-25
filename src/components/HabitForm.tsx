@@ -15,7 +15,8 @@ const CATEGORIES = [
   { name: "Other",       emoji: "⭐", color: "#9090b0" },
 ];
 
-const ICONS = ["💪","🏃","🧘","📚","💧","🥗","😴","🧠","✍️","🎯","🎨","🎵","💼","🌿","⭐","🔥","☀️","🌙","🍎","🚴"];
+const ICONS = ["💪","🏃","🧘","📚","💧","🥗","😴","🧠","✍️","🎯","🔥","🚴"];
+
 
 const EMOJI_PLACEHOLDER: Record<string, string> = {
   "💪": "Do a full-body workout",
@@ -142,18 +143,6 @@ export default function HabitForm({ initial, onSave, onCancel, title = "New Habi
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
-          </div>
-
-          {/* Description */}
-          <div className={styles.section}>
-            <label className={styles.label}>Description <span className={styles.opt}>(optional)</span></label>
-            <textarea
-              className={styles.textarea}
-              placeholder="What's this habit about?"
-              rows={2}
-              value={desc}
-              onChange={(e) => setDesc(e.target.value)}
-            />
           </div>
 
           {/* Category */}

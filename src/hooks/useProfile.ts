@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { updateProfile } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { doc, getDoc, setDoc, onSnapshot, updateDoc, increment } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export interface UserProfile {
   xp: number;
   level: number;
+  displayName?: string;
+  avatarEmoji?: string;
 }
 
 const XP_PER_HABIT = 50;
@@ -89,7 +93,7 @@ export function useProfile() {
     const newLevel = calculateLevel(newXP);
     const leveledUp = newLevel > profile.level;
     
-    const updatedProfile = { xp: newXP, level: newLevel };
+    const updatedProfile = { ...profile, xp: newXP, level: newLevel };
 
     if (isLocal) {
       setProfile(updatedProfile);
@@ -114,5 +118,35 @@ export function useProfile() {
     return leveledUp;
   }, [user, profile, isLocal]);
 
-  return { profile, loading, addXP, isLocal };
+  const updateProfileData = useCallback(async (data: { displayName?: string; avatarEmoji?: string }) => {
+    if (!user) return;
+
+    const updatedProfile = { ...profile, ...data };
+
+    // Update Firebase Auth displayName if provided
+    if (data.displayName !== undefined) {
+      try {
+        await updateProfile(auth.currentUser!, { displayName: data.displayName });
+      } catch {
+        // non-fatal
+      }
+    }
+
+    if (isLocal) {
+      setProfile(updatedProfile);
+      localStorage.setItem(`habitflow_profile_${user.uid}`, JSON.stringify(updatedProfile));
+    } else {
+      try {
+        await updateDoc(doc(db, "users", user.uid), data);
+        setProfile(updatedProfile);
+        localStorage.setItem(`habitflow_profile_${user.uid}`, JSON.stringify(updatedProfile));
+      } catch {
+        setProfile(updatedProfile);
+        localStorage.setItem(`habitflow_profile_${user.uid}`, JSON.stringify(updatedProfile));
+        setIsLocal(true);
+      }
+    }
+  }, [user, profile, isLocal]);
+
+  return { profile, loading, addXP, isLocal, updateProfileData };
 }

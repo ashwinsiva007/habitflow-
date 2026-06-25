@@ -8,9 +8,11 @@ import { useProfile, calculateProgress } from "@/hooks/useProfile";
 import Navbar from "@/components/Navbar";
 import HabitCard from "@/components/HabitCard";
 import HabitForm from "@/components/HabitForm";
+import DailyQuoteModal from "@/components/DailyQuoteModal";
 import { Flame, CheckCircle2, TrendingUp, Plus, Target, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import styles from "./dashboard.module.css";
+
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -53,6 +55,7 @@ export default function DashboardPage() {
 
   return (
     <div className="page-wrapper">
+      <DailyQuoteModal />
       <Navbar />
       <main className="main-content">
         {/* Header */}

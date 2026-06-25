@@ -182,22 +182,40 @@
   text-decoration: underline;
 }
 
-.mobileAuthNotice {
-  background: rgba(124, 106, 255, 0.08);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  margin-bottom: 24px;
+.rememberRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkBox {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-light);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.checkBox:hover {
+  border-color: var(--accent);
+}
+
+.checkBoxActive {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.rememberLabel {
   font-size: 13px;
-  line-height: 1.5;
   color: var(--text-secondary);
-}
-
-.mobileAuthNotice p {
-  margin: 0;
-}
-
-.mobileAuthNotice strong {
-  color: var(--accent);
+  cursor: pointer;
 }
 
