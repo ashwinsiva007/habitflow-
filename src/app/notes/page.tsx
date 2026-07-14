@@ -31,8 +31,8 @@ export default function NotesPage() {
   const [color,    setColor]    = useState(COLORS[0]);
   const [reminder, setReminder] = useState("");
 
-  // Close the note form when back button pressed on mobile
-  useBackHandler(() => { if (showForm) setShowForm(false); });
+  // Close the note form when back button pressed on mobile (only when form is open)
+  useBackHandler(() => setShowForm(false), showForm);
 
   const openNew = () => {
     setEditNote(null); setTitle(""); setContent(""); setColor(COLORS[0]); setReminder("");

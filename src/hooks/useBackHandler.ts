@@ -1,39 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
- * useBackHandler — prevents the hardware/browser back button from exiting
- * the app when a modal/overlay is open.
+ * useBackHandler — intercepts the hardware/browser back button ONLY when
+ * a modal/overlay is actually open, so it never interferes with page navigation.
  *
- * How it works:
- * 1. On mount, pushes a dummy history entry so the browser has somewhere
- *    to "go back" to without actually leaving the page.
- * 2. Listens for the "popstate" event (back button pressed).
- * 3. Instead of navigating away, it calls `onBack` (e.g., close the modal).
- *
- * Usage:
- *   useBackHandler(() => setShowModal(false));
+ * @param onBack  Callback to run when back is pressed (e.g. close the modal)
+ * @param isOpen  Pass true when the modal is visible; false otherwise.
+ *                When false the handler is a no-op and does NOT push any
+ *                history state, so normal navigation is completely unaffected.
  */
-export function useBackHandler(onBack: () => void) {
+export function useBackHandler(onBack: () => void, isOpen: boolean = true) {
+  // Keep a stable ref so the popstate listener always sees the latest callback
+  const onBackRef = useRef(onBack);
+  useEffect(() => { onBackRef.current = onBack; }, [onBack]);
+
   useEffect(() => {
-    // Push a dummy state so back button has something to pop
-    history.pushState({ modal: true }, "", location.href);
+    // Only intercept when the overlay is actually showing
+    if (!isOpen) return;
+
+    // Push one dummy entry — now pressing back pops THIS entry instead of leaving the page
+    history.pushState({ habitflowModal: true }, "", location.href);
 
     const handlePop = () => {
-      // Don't navigate — close the modal instead
-      onBack();
-      // Re-push so repeated back-presses keep working
-      history.pushState({ modal: true }, "", location.href);
+      onBackRef.current();
+      // Re-push so the NEXT back-press is also caught
+      history.pushState({ habitflowModal: true }, "", location.href);
     };
 
     window.addEventListener("popstate", handlePop);
 
     return () => {
+      // IMPORTANT: Do NOT call history.back() here.
+      // Calling history.back() during cleanup (which happens on page navigation)
+      // would reverse the navigation the user just triggered.
       window.removeEventListener("popstate", handlePop);
-      // Clean up: go back once to remove our dummy entry
-      history.back();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only on mount/unmount
+  }, [isOpen]);
 }

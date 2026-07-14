@@ -12,6 +12,7 @@ import {
   indexedDBLocalPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -21,6 +22,7 @@ interface AuthContextType {
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -82,8 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOut(auth);
   };
 
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, logOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, logOut, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

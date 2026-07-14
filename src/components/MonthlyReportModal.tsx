@@ -61,10 +61,8 @@ export default function MonthlyReportModal({ habits, userName }: MonthlyReportMo
     setVisible(false);
   };
 
-  // Intercept hardware back-button when modal is showing
-  useBackHandler(() => {
-    if (visible) handleClose();
-  });
+  // Intercept hardware back-button ONLY when modal is visible
+  useBackHandler(handleClose, visible);
 
   // Compute stats for the current month
   const stats = useMemo(() => {

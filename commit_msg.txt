@@ -1,1 +1,1 @@
-fix: Firebase subcollection restructure, HabitCard UI overflow, dynamic filters, voice notes speech-to-text, swipe tab navigation, back button modal fix  
+fix: resolve popstate back handler unmount navigation bug, implement forgot password feature in login view  

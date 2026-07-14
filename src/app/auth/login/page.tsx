@@ -10,7 +10,7 @@ import styles from "../auth.module.css";
 const SAVED_EMAIL_KEY = "habitflow_saved_email";
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, resetPassword } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +18,11 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Forgot password states
+  const [view, setView] = useState<"login" | "reset">("login");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
 
   // Pre-fill email if previously saved
   useEffect(() => {
@@ -47,6 +52,22 @@ export default function LoginPage() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setResetSuccess("");
+    setLoading(true);
+    try {
+      await resetPassword(resetEmail.trim());
+      setResetSuccess("A password reset link has been sent to your email.");
+      setResetEmail("");
+    } catch (err: any) {
+      setError(err?.message || "Failed to send password reset email. Check if the email is correct.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.card}>
@@ -62,77 +83,135 @@ export default function LoginPage() {
           <span>HabitFlow</span>
         </div>
 
-        <h1 className={styles.title}>Welcome back</h1>
-        <p className={styles.sub}>Sign in to continue your journey</p>
+        {view === "login" ? (
+          <>
+            <h1 className={styles.title}>Welcome back</h1>
+            <p className={styles.sub}>Sign in to continue your journey</p>
 
-        <form onSubmit={handleLogin} className={styles.form}>
-          <div className={styles.field}>
-            <label className="label">Email</label>
-            <div className={styles.inputWrap}>
-              <Mail size={16} className={styles.inputIcon} />
-              <input
-                className={`input ${styles.inputPadded}`}
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                id="login-email"
-                autoComplete="email"
-              />
-            </div>
-          </div>
+            <form onSubmit={handleLogin} className={styles.form}>
+              <div className={styles.field}>
+                <label className="label">Email</label>
+                <div className={styles.inputWrap}>
+                  <Mail size={16} className={styles.inputIcon} />
+                  <input
+                    className={`input ${styles.inputPadded}`}
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    id="login-email"
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
 
-          <div className={styles.field}>
-            <label className="label">Password</label>
-            <div className={styles.inputWrap}>
-              <Lock size={16} className={styles.inputIcon} />
-              <input
-                className={`input ${styles.inputPadded}`}
-                type={showPass ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                id="login-password"
-                autoComplete="current-password"
-              />
-              <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(!showPass)}>
-                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+              <div className={styles.field}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <label className="label">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => { setView("reset"); setError(""); setResetSuccess(""); }}
+                    style={{ background: "none", border: "none", color: "var(--accent)", fontSize: "12px", fontWeight: "600", cursor: "pointer", marginBottom: "6px" }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className={styles.inputWrap}>
+                  <Lock size={16} className={styles.inputIcon} />
+                  <input
+                    className={`input ${styles.inputPadded}`}
+                    type={showPass ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    id="login-password"
+                    autoComplete="current-password"
+                  />
+                  <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(!showPass)}>
+                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember me */}
+              <label className={styles.rememberRow} htmlFor="remember-me">
+                <div className={`${styles.checkBox} ${rememberMe ? styles.checkBoxActive : ""}`} onClick={() => setRememberMe(!rememberMe)}>
+                  {rememberMe && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={{ display: "none" }}
+                />
+                <span className={styles.rememberLabel}>Remember my email</span>
+              </label>
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button type="submit" className={`btn btn-primary ${styles.submitBtn}`} disabled={loading} id="login-submit">
+                {loading ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Signing in...</> : "Sign In"}
               </button>
-            </div>
-          </div>
+            </form>
 
-          {/* Remember me */}
-          <label className={styles.rememberRow} htmlFor="remember-me">
-            <div className={`${styles.checkBox} ${rememberMe ? styles.checkBoxActive : ""}`} onClick={() => setRememberMe(!rememberMe)}>
-              {rememberMe && (
-                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+            <p className={styles.switchText}>
+              Don&apos;t have an account? <Link href="/auth/signup" className={styles.switchLink}>Sign up</Link>
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className={styles.title}>Reset Password</h1>
+            <p className={styles.sub}>Enter your email to receive a password reset link</p>
+
+            <form onSubmit={handleResetPassword} className={styles.form}>
+              <div className={styles.field}>
+                <label className="label">Email Address</label>
+                <div className={styles.inputWrap}>
+                  <Mail size={16} className={styles.inputIcon} />
+                  <input
+                    className={`input ${styles.inputPadded}`}
+                    type="email"
+                    placeholder="you@example.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                    id="reset-email"
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              {error && <p className={styles.error}>{error}</p>}
+              {resetSuccess && (
+                <p style={{ fontSize: 13, color: "var(--success)", background: "var(--success-soft)", border: "1px solid rgba(34, 211, 160, 0.2)", padding: "10px 14px", borderRadius: "8px" }}>
+                  {resetSuccess}
+                </p>
               )}
-            </div>
-            <input
-              id="remember-me"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              style={{ display: "none" }}
-            />
-            <span className={styles.rememberLabel}>Remember my email</span>
-          </label>
 
-          {error && <p className={styles.error}>{error}</p>}
+              <button type="submit" className={`btn btn-primary ${styles.submitBtn}`} disabled={loading}>
+                {loading ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Sending...</> : "Send Reset Link"}
+              </button>
 
-          <button type="submit" className={`btn btn-primary ${styles.submitBtn}`} disabled={loading} id="login-submit">
-            {loading ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Signing in...</> : "Sign In"}
-          </button>
-        </form>
-
-        <p className={styles.switchText}>
-          Don&apos;t have an account? <Link href="/auth/signup" className={styles.switchLink}>Sign up</Link>
-        </p>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => { setView("login"); setError(""); setResetSuccess(""); }}
+                style={{ width: "100%", justifyContent: "center", padding: "13px" }}
+              >
+                Back to Sign In
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
 }
+

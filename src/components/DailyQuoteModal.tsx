@@ -72,10 +72,8 @@ export default function DailyQuoteModal() {
     setVisible(false);
   };
 
-  // Intercept hardware back-button when modal is showing
-  useBackHandler(() => {
-    if (visible) handleClose();
-  });
+  // Intercept hardware back-button ONLY when the modal is actually showing
+  useBackHandler(handleClose, visible);
 
   if (!visible) return null;
 
