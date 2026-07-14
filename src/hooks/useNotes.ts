@@ -8,8 +8,6 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  query,
-  where,
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -61,6 +59,12 @@ export function useNotes() {
     });
   };
 
+  // Returns the Firestore path: users/{uid}/notes (subcollection — clean & per-user)
+  const notesCol = useCallback(() => {
+    if (!user) return null;
+    return collection(db, "users", user.uid, "notes");
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       setNotes([]);
@@ -72,17 +76,16 @@ export function useNotes() {
     let unsubscribe = () => {};
 
     try {
-      const q = query(
-        collection(db, "notes"),
-        where("userId", "==", user.uid)
-      );
+      const col = notesCol();
+      if (!col) return;
 
+      // No where() filter needed — the subcollection already belongs to this user
       unsubscribe = onSnapshot(
-        q,
+        col,
         (snapshot) => {
-          const notesData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
+          const notesData = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
           })) as Note[];
 
           const sorted = sortNotes(notesData);
@@ -108,7 +111,7 @@ export function useNotes() {
     }
 
     return () => unsubscribe();
-  }, [user, loadFromLS, saveToLS]);
+  }, [user, loadFromLS, saveToLS, notesCol]);
 
   const addNote = useCallback(async (data: Omit<Note, "id" | "createdAtMs" | "userId">) => {
     if (!user) return;
@@ -129,8 +132,10 @@ export function useNotes() {
       });
     } else {
       try {
+        const col = notesCol();
+        if (!col) return;
         const { id, ...firebaseData } = newNote;
-        await addDoc(collection(db, "notes"), firebaseData);
+        await addDoc(col, firebaseData);
       } catch (err) {
         console.warn("Firestore addNote failed, performing local write:", err);
         setNotes((prev) => {
@@ -141,7 +146,7 @@ export function useNotes() {
         setIsLocal(true);
       }
     }
-  }, [user, isLocal, saveToLS]);
+  }, [user, isLocal, saveToLS, notesCol]);
 
   const updateNote = useCallback(async (id: string, data: Partial<Note>) => {
     if (!user) return;
@@ -155,7 +160,7 @@ export function useNotes() {
       });
     } else {
       try {
-        await updateDoc(doc(db, "notes", id), data);
+        await updateDoc(doc(db, "users", user.uid, "notes", id), data);
       } catch (err) {
         console.warn("Firestore updateNote failed, performing local update:", err);
         setNotes((prev) => {
@@ -180,7 +185,7 @@ export function useNotes() {
       });
     } else {
       try {
-        await deleteDoc(doc(db, "notes", id));
+        await deleteDoc(doc(db, "users", user.uid, "notes", id));
       } catch (err) {
         console.warn("Firestore deleteNote failed, performing local delete:", err);
         setNotes((prev) => {
@@ -207,7 +212,7 @@ export function useNotes() {
       });
     } else {
       try {
-        await updateDoc(doc(db, "notes", id), { pinned: !note.pinned });
+        await updateDoc(doc(db, "users", user.uid, "notes", id), { pinned: !note.pinned });
       } catch (err) {
         console.warn("Firestore togglePin failed, performing local toggle:", err);
         setNotes((prev) => {

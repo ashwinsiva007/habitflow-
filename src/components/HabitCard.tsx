@@ -60,7 +60,7 @@ export default function HabitCard({ habit, onToggle, onEdit, onDelete, onLogSkip
       {habit.isNegative && (
         <div className={styles.negativeBanner}>
           <XCircle size={13} />
-          <span>Break-the-habit tracker</span>
+          <span>Break habit</span>
         </div>
       )}
 
@@ -133,7 +133,7 @@ export default function HabitCard({ habit, onToggle, onEdit, onDelete, onLogSkip
                 {isCompletedToday ? (
                   <><CheckCircle2 size={18} />{habit.isNegative ? "Avoided ✓" : "Done"}</>
                 ) : (
-                  <><Circle size={18} />{habit.isNegative ? "I avoided it" : "Mark done"}</>
+                  <><Circle size={18} />{habit.isNegative ? "Avoided" : "Mark done"}</>
                 )}
               </button>
             </div>

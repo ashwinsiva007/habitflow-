@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ConfettiProvider from "@/components/ConfettiProvider";
+import SwipeNavWrapper from "@/components/SwipeNavWrapper";
 
 export const metadata: Metadata = {
   title: "HabitFlow — Build Better Habits",
@@ -44,7 +45,9 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <ConfettiProvider />
-            {children}
+            <SwipeNavWrapper>
+              {children}
+            </SwipeNavWrapper>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Habit, FrequencyType } from "@/hooks/useHabits";
 import { X, Check } from "lucide-react";
 import styles from "./HabitForm.module.css";
+import { useBackHandler } from "@/hooks/useBackHandler";
 
 const CATEGORIES = [
   { name: "Health",      emoji: "🏥", color: "#22d3a0" },
@@ -69,6 +70,9 @@ export default function HabitForm({ initial, onSave, onCancel, title = "New Habi
   const [isNegative,  setIsNegative]= useState(initial?.isNegative  || false);
   const [saving,      setSaving]    = useState(false);
   const [error,       setError]     = useState("");
+
+  // Intercept hardware back-button — close form instead of exiting app
+  useBackHandler(onCancel);
 
   const handleFreqSelect = (opt: typeof FREQ_OPTIONS[0]) => {
     setFrequency(opt.id);

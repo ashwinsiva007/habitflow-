@@ -5,6 +5,7 @@ import { format, getDaysInMonth, startOfMonth, endOfMonth, eachDayOfInterval } f
 import { Habit } from "@/hooks/useHabits";
 import { X, Trophy, Flame, TrendingUp, Star, CheckCircle2, AlertCircle } from "lucide-react";
 import styles from "./MonthlyReportModal.module.css";
+import { useBackHandler } from "@/hooks/useBackHandler";
 
 interface MonthlyReportModalProps {
   habits: Habit[];
@@ -59,6 +60,11 @@ export default function MonthlyReportModal({ habits, userName }: MonthlyReportMo
     localStorage.setItem(LS_KEY, monthStr);
     setVisible(false);
   };
+
+  // Intercept hardware back-button when modal is showing
+  useBackHandler(() => {
+    if (visible) handleClose();
+  });
 
   // Compute stats for the current month
   const stats = useMemo(() => {

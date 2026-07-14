@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import styles from "./SkipReasonModal.module.css";
+import { useBackHandler } from "@/hooks/useBackHandler";
 
 const SKIP_REASONS = [
   { id: "busy",       label: "Too Busy",         emoji: "😓" },
@@ -29,6 +30,9 @@ export default function SkipReasonModal({
 }: SkipReasonModalProps) {
   const [selected, setSelected] = useState<string>("");
   const [otherText, setOtherText] = useState("");
+
+  // Intercept hardware back-button — close modal instead of exiting app
+  useBackHandler(onDismiss);
 
   const handleSave = () => {
     const reason = selected === "other"

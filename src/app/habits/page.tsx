@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabits, Habit } from "@/hooks/useHabits";
@@ -13,7 +13,6 @@ import { Plus, Filter } from "lucide-react";
 import { format } from "date-fns";
 import styles from "./habits.module.css";
 
-const CATEGORIES = ["All", "Health", "Fitness", "Mindfulness", "Work", "Learning", "Social", "Other"];
 
 export default function HabitsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -33,7 +32,25 @@ export default function HabitsPage() {
   const [skipHabit, setSkipHabit] = useState<Habit | null>(null);
 
   const today = format(new Date(), "yyyy-MM-dd");
-  const filtered = filter === "All" ? habits : habits.filter((h) => h.category === filter);
+
+  // Dynamically build the category list from habits the user actually has
+  const availableCategories = useMemo(() => {
+    const cats = new Set(habits.map((h) => h.isNegative ? "Break habit" : h.category));
+    return ["All", ...Array.from(cats).sort()];
+  }, [habits]);
+
+  // Auto-reset filter when it no longer exists in available categories
+  useEffect(() => {
+    if (filter !== "All" && !availableCategories.includes(filter)) {
+      setFilter("All");
+    }
+  }, [availableCategories, filter]);
+
+  const filtered = filter === "All"
+    ? habits
+    : filter === "Break habit"
+      ? habits.filter((h) => h.isNegative)
+      : habits.filter((h) => !h.isNegative && h.category === filter);
 
   const handleEditSave = async (data: Omit<Habit, "id" | "userId" | "createdAtMs" | "streak" | "longestStreak" | "completedDates">) => {
     if (editingHabit) await updateHabit(editingHabit.id, data);
@@ -72,7 +89,7 @@ export default function HabitsPage() {
         {/* Category filters */}
         <div className={styles.filters}>
           <Filter size={15} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
-          {CATEGORIES.map((cat) => (
+          {availableCategories.map((cat) => (
             <button
               key={cat}
               className={`${styles.filterBtn} ${filter === cat ? styles.filterActive : ""}`}

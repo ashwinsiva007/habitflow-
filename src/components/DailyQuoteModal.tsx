@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "./DailyQuoteModal.module.css";
+import { useBackHandler } from "@/hooks/useBackHandler";
 
 const QUOTES = [
   "Small steps every day lead to giant leaps over time.",
@@ -70,6 +71,11 @@ export default function DailyQuoteModal() {
     localStorage.setItem(QUOTE_KEY, getTodayString());
     setVisible(false);
   };
+
+  // Intercept hardware back-button when modal is showing
+  useBackHandler(() => {
+    if (visible) handleClose();
+  });
 
   if (!visible) return null;
 
